@@ -1,0 +1,4 @@
+[workspace]
+members=[
+    "libnginx-wrapper", "nginx-helper", "nginx-api"
+]
