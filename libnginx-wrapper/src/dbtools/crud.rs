@@ -1,4 +1,4 @@
-use super::{open_database, params};
+use super::{open_database, params, NginxObj};
 
 pub fn create_tables() {
     open_database()
@@ -12,6 +12,22 @@ CREATE TABLE tblNginxConf(
 COMMIT;",
         )
         .unwrap();
+}
+
+pub fn select_all_from_tbl_nginxconf() -> Vec<NginxObj> {
+    open_database()
+        .prepare("SELECT ServerName,ProxyPass FROM tblNginxConf")
+        .unwrap()
+        .query_map([], |each_row| {
+            Ok(NginxObj::new(
+                each_row.get::<usize, String>(0).unwrap(),
+                each_row.get::<usize, String>(1).unwrap(),
+            )
+            .unwrap())
+        })
+        .unwrap()
+        .map(|each| each.unwrap())
+        .collect::<Vec<NginxObj>>()
 }
 
 pub fn insert_tbl_nginxconf(server_name: &str, proxy_pass: &str) {
