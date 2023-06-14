@@ -1,4 +1,4 @@
-pub mod migration;
+pub(crate) mod migration;
 pub mod crud;
 
 use super::{fstools::read_ops, http_server::NginxObj};

@@ -4,5 +4,5 @@ use std::{
     io::{BufReader, Read, BufWriter, Write},
 };
 
-pub mod read_ops;
-pub mod write_ops;
+pub(crate) mod read_ops;
+pub(crate) mod write_ops;

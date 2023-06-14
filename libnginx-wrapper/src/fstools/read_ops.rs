@@ -1,6 +1,6 @@
 use super::{read_dir, BufReader, NginxObj, OpenOptions, Read};
 
-pub fn read_nginx_dir() -> Vec<NginxObj> {
+pub(crate) fn read_nginx_dir() -> Vec<NginxObj> {
     read_dir("/etc/nginx/sites-enabled")
         .unwrap()
         .map(|each| {

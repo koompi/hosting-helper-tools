@@ -1,6 +1,6 @@
 use super::{BufWriter, OpenOptions, Write};
 
-pub fn write_file(destination_file: &str, config: &str, is_continuing: bool) {
+pub(crate) fn write_file(destination_file: &str, config: &str, is_continuing: bool) {
     BufWriter::new(
         match is_continuing {
             true => OpenOptions::new()

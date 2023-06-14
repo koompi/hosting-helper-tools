@@ -1,4 +1,4 @@
-pub fn gen_templ() -> String {
+pub(crate) fn gen_templ() -> String {
     format!("
 user www-data;
 worker_cpu_affinity auto;

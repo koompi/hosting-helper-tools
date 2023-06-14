@@ -1,2 +1,2 @@
-pub mod http_server;
-pub mod nginx_conf;
+pub(crate) mod http_server;
+pub(crate) mod nginx_conf;

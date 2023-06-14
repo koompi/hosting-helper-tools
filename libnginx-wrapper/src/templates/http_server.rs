@@ -1,4 +1,4 @@
-pub fn gen_templ(proxy_pass: &str, server_name: &str) -> String {
+pub(crate) fn gen_templ(proxy_pass: &str, server_name: &str) -> String {
     format!(
         r#"
 server {{

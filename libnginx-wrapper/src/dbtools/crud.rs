@@ -1,6 +1,6 @@
 use super::{open_database, params, NginxObj};
 
-pub fn create_tables() {
+pub(crate) fn create_tables() {
     open_database()
         .execute_batch(
             "
@@ -30,7 +30,7 @@ pub fn select_all_from_tbl_nginxconf() -> Vec<NginxObj> {
         .collect::<Vec<NginxObj>>()
 }
 
-pub fn insert_tbl_nginxconf(server_name: &str, proxy_pass: &str) {
+pub(crate) fn insert_tbl_nginxconf(server_name: &str, proxy_pass: &str) {
     open_database()
         .execute(
             "INSERT INTO tblNginxConf(ServerName, ProxyPass) VALUES(?1, ?2);",
@@ -39,7 +39,7 @@ pub fn insert_tbl_nginxconf(server_name: &str, proxy_pass: &str) {
         .unwrap();
 }
 
-pub fn delete_from_tbl_nginxconf(server_name: &str) {
+pub(crate) fn delete_from_tbl_nginxconf(server_name: &str) {
     open_database()
         .execute(
             "DELETE FROM tblNginxConf WHERE ServerName = ?1);",
