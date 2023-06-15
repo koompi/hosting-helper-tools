@@ -22,7 +22,7 @@ fn extract_nginx_obj(config: String) -> NginxObj {
             "server_name" => server_name = each.split_whitespace().last().unwrap().replace(";", ""),
             _ => {}
         });
-    NginxObj::new(server_name, proxy_pass).unwrap()
+    NginxObj::new(server_name, proxy_pass)
 }
 
 fn read_file(source_file: &str) -> String {

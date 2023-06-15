@@ -6,3 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix-cors = "*"
+actix-web = "*"
+config = "*"
+# clap = { version = "*", features = ["derive"] }
+serde = { version = "*", features = ["derive"]}
+
+libnginx-wrapper = { path = "../libnginx-wrapper" }

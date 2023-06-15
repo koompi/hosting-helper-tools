@@ -6,7 +6,7 @@ pub mod templates;
 use std::process::Command;
 
 fn restart_reload_service() {
-    Command::new("systemdctl")
+    Command::new("systemctl")
         .arg("reload-or-restart")
         .arg("nginx")
         .output()
@@ -17,7 +17,7 @@ pub fn init_migration(force: bool) {
     [
         "/etc/nginx/sites-enabled",
         "/etc/nginx/sites-stream",
-        "/etc/nginx/ssl/",
+        "/etc/nginx/ssl",
     ]
     .into_iter()
     .for_each(|each| std::fs::create_dir_all(each).unwrap_or_default());
@@ -34,8 +34,9 @@ pub fn init_migration(force: bool) {
         .arg("req")
         .arg("-x509")
         .arg("-nodes")
-        .args(["-day", "365"])
+        .args(["-days", "365"])
         .args(["-newkey", "rsa:2048"])
+        .args(["-subj", "/C=KH/ST=Cambodia/L=Phnom Penh/O=KOOMPI Co., Ltd./CN="])
         .args(["-keyout", "/etc/nginx/ssl/nginx.key"])
         .args(["-out", "/etc/nginx/ssl/nginx.crt"])
         .output()

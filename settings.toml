@@ -1,0 +1,4 @@
+hosting_addr = "localhost"
+hosting_port = "8080"
+production = false
+cors_allowed_addr = ["localhost", "www.koompi.com"]
