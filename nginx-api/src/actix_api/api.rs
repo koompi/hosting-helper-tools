@@ -1,8 +1,8 @@
-use super::init_migration;
-use actix_web::{delete, error, get, post, web::Json, Error, HttpRequest, HttpResponse};
+use super::{HttpResponse, super::init_migration, obj_error::ActixCustomError};
+use actix_web::{delete, get, post, web::Json, Error, HttpRequest};
 use libnginx_wrapper::{
     dbtools::crud::select_all_from_tbl_nginxconf,
-    http_server::{remake_ssl, remove_nginx_conf, NginxObj},
+    http_server::nginx_ops::{remake_ssl, remove_nginx_conf, NginxObj},
 };
 
 #[get("/nginx/list")]
@@ -11,33 +11,33 @@ pub async fn get_nginx_list() -> Result<HttpResponse, Error> {
 }
 
 #[post("/nginx/add")]
-pub async fn post_add_nginx(args: Json<NginxObj>) -> Result<HttpResponse, Error> {
+pub async fn post_add_nginx(args: Json<NginxObj>) -> Result<HttpResponse, ActixCustomError> {
 
     let args = args.into_inner();
 
     match args.verify() {
         Ok(()) => Ok(()),
-        Err(err) => Err(error::ErrorBadRequest(Json(err))),
+        Err((error_code, message)) => Err(ActixCustomError::new(error_code, message)),
     }?;
 
     match args.finish() {
         Ok(()) => Ok(()),
-        Err(err) => Err(error::ErrorInternalServerError(Json(err))),
+        Err((error_code, message)) => Err(ActixCustomError::new(error_code, message)),
     }?;
 
     Ok(HttpResponse::Ok().finish())
 }
 
 #[post("/cert/force/{server_name}")]
-pub async fn post_force_cert(req: HttpRequest) -> Result<HttpResponse, Error> {
+pub async fn post_force_cert(req: HttpRequest) -> Result<HttpResponse, ActixCustomError> {
     let server_name = match req.match_info().get("server_name") {
         Some(data) => Ok(data),
-        None => Err(error::ErrorBadRequest("Missing Server Name")),
+        None => Err(ActixCustomError::new(400, String::from("Missing Server Name"))),
     }?;
 
     match remake_ssl(server_name) {
         Ok(()) => Ok(()),
-        Err(err) => Err(error::ErrorInternalServerError(Json(err))),
+        Err((error_code, message)) => Err(ActixCustomError::new(error_code, message)),
     }?;
 
     Ok(HttpResponse::Ok().finish())
@@ -50,15 +50,15 @@ pub async fn post_force_migration() -> Result<HttpResponse, Error> {
 }
 
 #[delete("/nginx/delete/{server_name}")]
-pub async fn delete_remove_nginx(req: HttpRequest) -> Result<HttpResponse, Error> {
+pub async fn delete_remove_nginx(req: HttpRequest) -> Result<HttpResponse, ActixCustomError> {
     let server_name = match req.match_info().get("server_name") {
         Some(data) => Ok(data),
-        None => Err(error::ErrorBadRequest("Missing Server Name")),
+        None => Err(ActixCustomError::new(400, String::from("Missing Server Name"))),
     }?;
 
-    match remove_nginx_conf(server_name) {
+    match remove_nginx_conf(server_name.as_ref()) {
         Ok(()) => Ok(()),
-        Err(err) => Err(error::ErrorInternalServerError(Json(err))),
+        Err((error_code, message)) => Err(ActixCustomError::new(error_code, message)),
     }?;
 
     Ok(HttpResponse::Ok().finish())

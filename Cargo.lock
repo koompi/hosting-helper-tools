@@ -801,7 +801,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "nginx-helper"
+name = "nginx-cli"
 version = "0.1.0"
 
 [[package]]

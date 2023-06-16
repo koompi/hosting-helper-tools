@@ -1,3 +1,5 @@
+use super::super::{PROXY_SITES_PATH, STREAM_SITES_PATH, REDIRECT_SITES_PATH};
+
 pub(crate) fn gen_templ() -> String {
     format!("
 user www-data;
@@ -62,7 +64,8 @@ http {{
     # Virtual Host Configs
     ##
     include /etc/nginx/conf.d/*.conf;
-    include /etc/nginx/sites-enabled/*.conf;
+    include {PROXY_SITES_PATH}/*.conf;
+    include {REDIRECT_SITES_PATH}/*.conf;
     server {{
         listen      80 default_server;
         server_name _;
@@ -86,6 +89,6 @@ stream {{
     access_log  /var/log/nginx/access.log basic;
     error_log  /var/log/nginx/error.log debug;
     
-    include /etc/nginx/sites-stream/*.conf;
+    include {STREAM_SITES_PATH}/*.conf;
 }}")
 }

@@ -1,11 +1,9 @@
 pub(crate) mod migration;
 pub mod crud;
 
-use super::{fstools::read_ops, http_server::NginxObj};
+use super::{fstools::read_ops, http_server::nginx_ops::{NginxObj, NginxFeatures}, DATABASE_PATH};
 use rusqlite::{params, Connection};
 
-const DATABASE: &str = "./libnginx-wrapper.db";
-
 fn open_database() -> Connection {
-    Connection::open(DATABASE).unwrap()
+    Connection::open(DATABASE_PATH).unwrap()
 }

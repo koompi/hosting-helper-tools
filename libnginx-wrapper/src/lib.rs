@@ -5,6 +5,12 @@ pub mod templates;
 
 use std::process::Command;
 
+const STREAM_SITES_PATH: &str = "/etc/nginx/stream-sites";
+const REDIRECT_SITES_PATH: &str = "/etc/nginx/redirect-sites";
+const PROXY_SITES_PATH: &str = "/etc/nginx/proxy-sites";
+const NGINX_DEFAULT_CERT_PATH: &str = "/etc/nginx/ssl";
+const DATABASE_PATH: &str = "./libnginx-wrapper.db";
+
 fn restart_reload_service() {
     Command::new("systemctl")
         .arg("reload-or-restart")
@@ -15,9 +21,10 @@ fn restart_reload_service() {
 
 pub fn init_migration(force: bool) {
     [
-        "/etc/nginx/sites-enabled",
-        "/etc/nginx/sites-stream",
-        "/etc/nginx/ssl",
+        STREAM_SITES_PATH,
+        REDIRECT_SITES_PATH,
+        PROXY_SITES_PATH,
+        NGINX_DEFAULT_CERT_PATH,
     ]
     .into_iter()
     .for_each(|each| std::fs::create_dir_all(each).unwrap_or_default());
@@ -37,8 +44,8 @@ pub fn init_migration(force: bool) {
         .args(["-days", "365"])
         .args(["-newkey", "rsa:2048"])
         .args(["-subj", "/C=KH/ST=Cambodia/L=Phnom Penh/O=KOOMPI Co., Ltd./CN="])
-        .args(["-keyout", "/etc/nginx/ssl/nginx.key"])
-        .args(["-out", "/etc/nginx/ssl/nginx.crt"])
+        .args(["-keyout", &format!("{NGINX_DEFAULT_CERT_PATH}/nginx.key")])
+        .args(["-out", &format!("{NGINX_DEFAULT_CERT_PATH}/nginx.crt")])
         .output()
         .unwrap();
 

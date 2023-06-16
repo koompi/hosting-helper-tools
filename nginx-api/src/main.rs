@@ -1,4 +1,4 @@
-mod api;
+mod actix_api;
 use actix_web::{middleware, App, HttpServer};
 use libnginx_wrapper::init_migration;
 use serde::Deserialize;
@@ -62,11 +62,11 @@ async fn main() -> std::io::Result<()> {
                     .supports_credentials(),
             )
             .wrap(middleware::Logger::default())
-            .service(api::get_nginx_list)
-            .service(api::post_add_nginx)
-            .service(api::post_force_cert)
-            .service(api::post_force_migration)
-            .service(api::delete_remove_nginx)
+            .service(actix_api::api::get_nginx_list)
+            .service(actix_api::api::post_add_nginx)
+            .service(actix_api::api::post_force_cert)
+            .service(actix_api::api::post_force_migration)
+            .service(actix_api::api::delete_remove_nginx)
     })
     .bind(&hosting)?;
     println!("Server Running at {hosting}");
