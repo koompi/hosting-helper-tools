@@ -76,7 +76,7 @@ Body
 | Variable    | Data Type                                                                               |
 | ----------- | --------------------------------------------------------------------------------------- |
 | server_name | String: eg. rithy.org                                                                   |
-| target_site | String: eg. weteka.org/user/rithy                                                       |
+| target_site | String: eg. https://weteka.org/user/rithy                                                       |
 | feature     | String: `Proxy` (forward without changing name) _or_ `Redirect` (forward changing name) |
 
 Response 200
