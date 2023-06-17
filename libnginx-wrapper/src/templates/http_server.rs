@@ -1,4 +1,6 @@
 pub(crate) fn gen_proxy_templ(proxy_pass: &str, server_name: &str) -> String {
+    let proxy_host = url::Url::parse(proxy_pass).unwrap();
+    let proxy_host = proxy_host.domain().unwrap();
     format!(
         r#"
 server {{
@@ -8,7 +10,7 @@ server {{
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header Host {proxy_pass};
+        proxy_set_header Host {proxy_host};
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Port $server_port;

@@ -71,7 +71,7 @@ impl NginxObj {
     }
 
     pub fn finish(&self) -> Result<(), (u16, String)> {
-        self.write_to_disk();
+        let destination_file = self.write_to_disk();
         match self.make_ssl() {
             Ok(()) => Ok({
                 restart_reload_service();
@@ -81,12 +81,15 @@ impl NginxObj {
                     self.feature.to_string().as_ref(),
                 );
             }),
-            Err(err) => Err(err),
+            Err(err) => Err({
+                std::fs::remove_file(destination_file).unwrap();
+                err
+            }),
         }?;
         Ok(())
     }
 
-    fn write_to_disk(&self) {
+    fn write_to_disk(&self) -> String {
         let (config, destination_file) = match self.feature {
             NginxFeatures::Proxy => (
                 gen_proxy_templ(self.target_site.as_ref(), self.server_name.as_ref()),
@@ -98,6 +101,7 @@ impl NginxObj {
             ),
         };
         write_file(&destination_file, &config, false);
+        destination_file
     }
     fn make_ssl(&self) -> Result<(), (u16, String)> {
         match Command::new("certbot")
