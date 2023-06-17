@@ -2,7 +2,7 @@
 
 ## How to run
 
-- First, make file `settings.toml` from file `settings.toml.bk` at root directory of this project
+- First, make file `settings.toml` from file `settings.toml.bk` at root directory of this project (login accounts need to be added to this file before running)
 
 - Second, get binary from Compiling this project to the same place as `settings.toml`
 
@@ -11,7 +11,53 @@
   sudo ./nginx-api
   ```
 
-## API
+## Public API
+
+<details close="close">
+<summary><b>POST</b> /login</summary>
+
+---
+
+| Header | Data Type |
+| ------ | --------- |
+| None   | None      |
+
+Body
+
+```json
+{
+  "username": "isaac",
+  "password": "123"
+}
+```
+
+Response 200
+
+```json
+{
+  "access_token": "eyJhbGciOiJFZERTQSJ9.eyJleHAiOjE2ODY5ODE5MTMsImlhdCI6MTY4Njk3ODMxMywidXNlcm5hbWUiOiJpc2FhYyIsInBhc3N3b3JkIjoiMTIzIn0.7wPA1dVRrBnRso4ut1R_N1Y_l66To8Z4s5nXLnZDfv8rKcITFP2hrjmhHw7v3XcareYFYHmifNo1McWDaKmMBQ",
+  "refresh_token": "eyJhbGciOiJFZERTQSJ9.eyJleHAiOjE2ODcwNjQ3MTMsImlhdCI6MTY4Njk3ODMxMywidXNlcm5hbWUiOiJpc2FhYyIsInBhc3N3b3JkIjoiMTIzIn0.WLQyjUQrnrh573eRgzh67YRjtblQrJsJ4EDOYouvA4N7WAr_ZCJFBPGtivhrjmd6zE4OA3ZUCw28r3zml2MmCw"
+}
+```
+
+| Error | Body                   |
+| ----- | ---------------------- |
+| 400   | actual_error_goes_here |
+| 401   | Unautorised            |
+| 500   | actual_error_goes_here |
+
+---
+
+</details>
+
+## Protected API
+
+All protected API endpoint needs:
+
+| Header        | Data Type |
+| ------------- | --------- |
+| access_token  | String    |
+| refresh_token | String    |
 
 <details close="close">
 <summary><b>GET</b> /nginx/list</summary>
