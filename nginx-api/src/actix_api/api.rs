@@ -13,6 +13,10 @@ use libnginx_wrapper::{
     http_server::nginx_ops::{remake_ssl, remove_nginx_conf, NginxObj},
 };
 
+// pub async fn default_route() -> Result<HttpResponse, ActixCustomError> {
+//     Err(ActixCustomError::new( 404, String::from("Not Found")))
+// }
+
 #[post("/login")]
 async fn login(
     token_signer: Data<actix_jwt_auth_middleware::TokenSigner<User, Ed25519>>,

@@ -56,7 +56,7 @@ async fn main() -> std::io::Result<()> {
         settings.get_hosting_port()
     );
 
-    // init_migration(false);
+    init_migration(false);
 
     let server = HttpServer::new(move || {
         let cors_allowed_addr = settings.get_cors_allowed_addr().clone();
@@ -71,6 +71,8 @@ async fn main() -> std::io::Result<()> {
                     .expect(""),
             ))
             .enable_header_tokens(true)
+            .enable_cookie_tokens(false)
+            .enable_query_tokens(false)
             .renew_refresh_token_automatically(true)
             .access_token_name("access_token")
             .refresh_token_name("refresh_token")
@@ -104,6 +106,7 @@ async fn main() -> std::io::Result<()> {
                     .service(actix_api::api::post_force_migration)
                     .service(actix_api::api::delete_remove_nginx),
             )
+            // .default_service(actix_api::api::default_route)
     })
     .bind(&hosting)?;
     println!("Server Running at {hosting}");
