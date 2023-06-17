@@ -9,7 +9,11 @@ edition = "2021"
 actix-cors = "*"
 actix-web = "*"
 config = "*"
-# clap = { version = "*", features = ["derive"] }
-serde = { version = "*", features = ["derive"]}
+actix-jwt-auth-middleware = "*"
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+jwt-compact = { version = "*", features = ["ed25519-compact"] }
+ed25519-compact = "*"
+time = "*"
 
 libnginx-wrapper = { path = "../libnginx-wrapper" }
