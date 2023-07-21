@@ -45,7 +45,7 @@ fn extract_nginx_proxy(config: String) -> NginxObj {
                 .replace(";", "");
         }
     });
-    // println!("{server_name}|{proxy_pass}");
+    
     NginxObj::new(server_name, proxy_pass, NginxFeatures::Proxy)
 }
 
@@ -67,7 +67,7 @@ fn extract_nginx_redirect(config: String) -> NginxObj {
                 .replace(";", "");
         }
     });
-    // println!("{server_name}|{target_site}");
+
     NginxObj::new(server_name, target_site, NginxFeatures::Redirect)
 }
 
