@@ -1,12 +1,12 @@
-use super::super::{PROXY_SITES_PATH, STREAM_SITES_PATH, REDIRECT_SITES_PATH};
+use super::super::{PROXY_SITES_PATH, STREAM_SITES_PATH, REDIRECT_SITES_PATH, PROGRAM_BASE_NAME, NGINX_DEFAULT_CERT_PATH};
 
 pub(crate) fn gen_templ() -> String {
     format!("
 user www-data;
 worker_cpu_affinity auto;
 worker_processes auto;
-pid /run/nginx.pid;
-include /etc/nginx/modules-enabled/*.conf;
+pid /run/{PROGRAM_BASE_NAME}.pid;
+include /etc/{PROGRAM_BASE_NAME}/modules-enabled/*.conf;
 
 events {{
     worker_connections 1024;
@@ -30,7 +30,7 @@ http {{
     # server_names_hash_bucket_size 64;
     # server_name_in_redirect off;
 
-    include /etc/nginx/mime.types;
+    include /etc/{PROGRAM_BASE_NAME}/mime.types;
     default_type application/octet-stream;
 
     ##
@@ -44,8 +44,8 @@ http {{
     # Logging Settings
     ##
 
-    access_log /var/log/nginx/access.log;
-    error_log /var/log/nginx/error.log;
+    access_log /var/log/{PROGRAM_BASE_NAME}/access.log;
+    error_log /var/log/{PROGRAM_BASE_NAME}/error.log;
 
     ##
     # Gzip Settings
@@ -63,7 +63,7 @@ http {{
     ##
     # Virtual Host Configs
     ##
-    include /etc/nginx/conf.d/*.conf;
+    include /etc/{PROGRAM_BASE_NAME}/conf.d/*.conf;
     include {PROXY_SITES_PATH}/*.conf;
     include {REDIRECT_SITES_PATH}/*.conf;
     server {{
@@ -74,8 +74,8 @@ http {{
     server {{
         listen 443 ssl;
         server_name _;
-        ssl_certificate /etc/nginx/ssl/nginx.crt;
-        ssl_certificate_key /etc/nginx/ssl/nginx.key;
+        ssl_certificate {NGINX_DEFAULT_CERT_PATH}/{PROGRAM_BASE_NAME}.crt;
+        ssl_certificate_key {NGINX_DEFAULT_CERT_PATH}/{PROGRAM_BASE_NAME}.key;
         return       444;
     }}
 
@@ -86,8 +86,8 @@ stream {{
                      '$protocol $status $bytes_sent $bytes_received '
                      '$session_time';
 
-    access_log  /var/log/nginx/access.log basic;
-    error_log  /var/log/nginx/error.log debug;
+    access_log  /var/log/{PROGRAM_BASE_NAME}/access.log basic;
+    error_log  /var/log/{PROGRAM_BASE_NAME}/error.log debug;
     
     include {STREAM_SITES_PATH}/*.conf;
 }}")
