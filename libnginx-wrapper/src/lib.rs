@@ -10,6 +10,8 @@ const PROGRAM_BASE_PATH: &str = "/etc/nginx";
 const STREAM_SITES_PATH: &str = "/etc/nginx/stream-sites";
 const REDIRECT_SITES_PATH: &str = "/etc/nginx/redirect-sites";
 const PROXY_SITES_PATH: &str = "/etc/nginx/proxy-sites";
+const SPA_SITES_PATH: &str = "/etc/nginx/spa-sites";
+const FILE_SITES_PATH: &str = "/etc/nginx/file-sites";
 const NGINX_DEFAULT_CERT_PATH: &str = "/etc/nginx/ssl";
 const DATABASE_PATH: &str = "./libnginx-wrapper.db";
 

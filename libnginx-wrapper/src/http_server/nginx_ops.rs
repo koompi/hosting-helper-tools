@@ -3,13 +3,13 @@ use std::{fmt, str::FromStr};
 use url::Url;
 
 use super::{
-    super::{restart_reload_service, PROXY_SITES_PATH, REDIRECT_SITES_PATH},
+    super::{restart_reload_service, PROXY_SITES_PATH, REDIRECT_SITES_PATH, SPA_SITES_PATH, FILE_SITES_PATH},
     dbtools::crud::{
         delete_from_tbl_nginxconf, insert_tbl_nginxconf, query_existence_from_tbl_nginxconf,
         select_one_from_tbl_nginxconf,
     },
     fstools::write_ops::write_file,
-    templates::http_server::{gen_proxy_templ, gen_redirect_templ},
+    templates::http_server::{gen_proxy_templ, gen_redirect_templ, gen_filehost_templ, gen_spa_templ},
     Command,
 };
 
@@ -17,6 +17,8 @@ use super::{
 pub enum NginxFeatures {
     Redirect,
     Proxy,
+    SPA,
+    FileHost
 }
 
 impl fmt::Display for NginxFeatures {
@@ -24,6 +26,8 @@ impl fmt::Display for NginxFeatures {
         match self {
             NginxFeatures::Proxy => write!(f, "Proxy"),
             NginxFeatures::Redirect => write!(f, "Redirect"),
+            NginxFeatures::FileHost => write!(f, "FileHost"),
+            NginxFeatures::SPA => write!(f, "SPA")
         }
     }
 }
@@ -57,10 +61,16 @@ impl NginxObj {
     }
 
     pub fn verify(&self) -> Result<(), (u16, String)> {
-        match Url::parse(&self.get_target_site()) {
-            Ok(_) => Ok(()),
-            Err(err) => Err((400, format!("Proxy Pass Arg Error: {}", err.to_string()))),
-        }?;
+        match &self.feature {
+            NginxFeatures::Redirect | NginxFeatures::Proxy => match Url::parse(&self.get_target_site()) {
+                Ok(_) => Ok(()),
+                Err(err) => Err((400, format!("Target Site Arg Error: {}", err.to_string()))),
+            }?,
+            NginxFeatures::SPA | NginxFeatures::FileHost => match std::path::Path::new(&self.target_site).is_absolute() {
+                true => Ok(()),
+                false => Err((400, format!("Target Site Arg Error: Path not Absolute")))
+            }?,
+        }
 
         match query_existence_from_tbl_nginxconf(&self.server_name) {
             true => Err((400, String::from("Server Name Arg Error: Already Existed"))),
@@ -99,6 +109,14 @@ impl NginxObj {
                 gen_redirect_templ(self.target_site.as_ref(), self.server_name.as_ref()),
                 format!("{}/{}.conf", REDIRECT_SITES_PATH, &self.server_name),
             ),
+            NginxFeatures::SPA => (
+                gen_spa_templ(self.target_site.as_ref(), self.server_name.as_ref()),
+                format!("{}/{}.conf", SPA_SITES_PATH, &self.server_name),
+            ),
+            NginxFeatures::FileHost => (
+                gen_filehost_templ(self.target_site.as_ref(), self.server_name.as_ref()),
+                format!("{}/{}.conf", FILE_SITES_PATH, &self.server_name),
+            )
         };
         write_file(&destination_file, &config, false);
         destination_file
@@ -165,6 +183,14 @@ pub fn remove_nginx_conf(server_name: &str) -> Result<(), (u16, String)> {
         }
         NginxFeatures::Redirect => {
             std::fs::remove_file(format!("{}/{}.conf", REDIRECT_SITES_PATH, server_name))
+                .or_else(|err| Err((500, err.to_string())))
+        },
+        NginxFeatures::SPA => {
+            std::fs::remove_file(format!("{}/{}.conf", SPA_SITES_PATH, server_name))
+                .or_else(|err| Err((500, err.to_string())))
+        },
+        NginxFeatures::FileHost => {
+            std::fs::remove_file(format!("{}/{}.conf", FILE_SITES_PATH, server_name))
                 .or_else(|err| Err((500, err.to_string())))
         }
     }?;

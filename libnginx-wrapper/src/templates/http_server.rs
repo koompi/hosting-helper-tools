@@ -39,3 +39,43 @@ server {{
 }}"#
     )
 }
+
+pub(crate) fn gen_filehost_templ(target_location: &str, server_name: &str) -> String{
+    format!(
+        r#"
+server {{
+    server_name {server_name};
+    location / {{
+        root {target_location};
+        autoindex on;
+        sendfile           on;
+        sendfile_max_chunk 1m;  
+        tcp_nopush on;
+        keepalive_timeout 65;
+    }}
+
+    listen [::]:80;
+    listen 80;
+
+}}"#
+    )
+}
+
+pub(crate) fn gen_spa_templ(target_location: &str, server_name: &str) -> String{
+    format!(
+        r#"
+server {{
+    server_name {server_name};
+    root {target_location};
+    index index.html index.htm index.nginx-debian.html;
+    location / {{
+        try_files $uri /index.html;
+        #try_files $uri $uri/ =404;
+    }}
+
+    listen [::]:80;
+    listen 80;
+
+}}"#
+    )
+}

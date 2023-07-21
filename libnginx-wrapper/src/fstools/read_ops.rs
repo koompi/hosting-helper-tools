@@ -21,6 +21,12 @@ fn read_nginx_from_dir(nginx_path: &str, feat_type: NginxFeatures) -> Vec<NginxO
             match feat_type {
                 NginxFeatures::Proxy => extract_nginx_proxy(read_file(source_file)),
                 NginxFeatures::Redirect => extract_nginx_redirect(read_file(source_file)),
+                NginxFeatures::SPA => {
+                    extract_nginx_filehost_and_spa(read_file(source_file), NginxFeatures::SPA)
+                }
+                NginxFeatures::FileHost => {
+                    extract_nginx_filehost_and_spa(read_file(source_file), NginxFeatures::FileHost)
+                }
             }
         })
         .collect::<Vec<NginxObj>>()
@@ -45,7 +51,7 @@ fn extract_nginx_proxy(config: String) -> NginxObj {
                 .replace(";", "");
         }
     });
-    
+
     NginxObj::new(server_name, proxy_pass, NginxFeatures::Proxy)
 }
 
@@ -69,6 +75,29 @@ fn extract_nginx_redirect(config: String) -> NginxObj {
     });
 
     NginxObj::new(server_name, target_site, NginxFeatures::Redirect)
+}
+
+fn extract_nginx_filehost_and_spa(config: String, feature: NginxFeatures) -> NginxObj {
+    let mut target_location = String::new();
+    let mut server_name = String::new();
+    config.lines().for_each(|each_line| {
+        let each_line = each_line.trim();
+        if each_line.contains("root") {
+            target_location = each_line
+                .split_whitespace()
+                .last()
+                .unwrap()
+                .replace(";", "");
+        } else if each_line.contains("server_name") {
+            server_name = each_line
+                .split_whitespace()
+                .last()
+                .unwrap()
+                .replace(";", "");
+        }
+    });
+
+    NginxObj::new(server_name, target_location, feature)
 }
 
 fn read_file(source_file: &str) -> String {
