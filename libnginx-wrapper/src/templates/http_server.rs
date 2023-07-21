@@ -20,8 +20,7 @@ server {{
     listen [::]:80;
     listen 80;
 
-}}    
-"#
+}}"#
     )
 }
 
@@ -37,7 +36,6 @@ server {{
     listen [::]:80;
     listen 80;
 
-}}    
-"#
+}}"#
     )
 }
