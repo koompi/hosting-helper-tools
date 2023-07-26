@@ -59,6 +59,23 @@ pub fn select_all_from_tbl_nginxconf() -> Vec<NginxObj> {
         .collect::<Vec<NginxObj>>()
 }
 
+pub fn select_all_by_feature_from_tbl_nginxconf(feature: &str) -> Vec<NginxObj> {
+    open_database()
+        .prepare("SELECT ServerName,Target,Feature FROM tblNginxConf WHERE Feature = ?1")
+        .unwrap()
+        .query_map(params![feature], |each_row| {
+            Ok(NginxObj::new(
+                each_row.get::<usize, String>(0).unwrap(),
+                each_row.get::<usize, String>(1).unwrap(),
+                NginxFeatures::from_str(each_row.get::<usize, String>(2).unwrap().as_str())
+                    .unwrap(),
+            ))
+        })
+        .unwrap()
+        .map(|each| each.unwrap())
+        .collect::<Vec<NginxObj>>()
+}
+
 pub(crate) fn insert_tbl_nginxconf(server_name: &str, proxy_pass: &str, feature: &str) {
     open_database()
         .execute(
