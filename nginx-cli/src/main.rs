@@ -1,6 +1,6 @@
 mod add_subcmd;
 mod del_subcmd;
-mod print_subcmd;
+mod list_subcmd;
 
 use clap::{Arg, ArgAction, Command};
 
@@ -13,7 +13,7 @@ fn main() {
         .author("KOOMPI Development Team")
         .subcommand(add_subcmd::add_subcmd())
         .subcommand(del_subcmd::del_subcmd())
-        .subcommand(print_subcmd::print_subcmd())
+        .subcommand(list_subcmd::print_subcmd())
 
         .get_matches();
 
