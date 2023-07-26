@@ -1,6 +1,7 @@
 mod add_subcmd;
 mod del_subcmd;
 mod list_subcmd;
+mod matcher;
 
 use clap::{Arg, ArgAction, Command};
 
