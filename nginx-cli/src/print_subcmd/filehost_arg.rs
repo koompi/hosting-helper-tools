@@ -7,5 +7,5 @@ pub(crate) fn filehost_arg() -> Arg {
         .help("List FileHost Feature")
         .required(true)
         .action(ArgAction::SetTrue)
-        .conflicts_with_all(["all", "redirect_feature", "proxy_feature", "spa_feature"])
+        .conflicts_with_all(["all_feature", "redirect_feature", "proxy_feature", "spa_feature"])
 }

@@ -6,6 +6,6 @@ pub(crate) fn proxy_arg() -> Arg {
         .long("proxy")
         .help("List Proxy Feature")
         .required(true)
-        .conflicts_with_all(["all", "redirect_feature", "filehost_feature", "spa_feature"])
+        .conflicts_with_all(["all_feature", "redirect_feature", "filehost_feature", "spa_feature"])
         .action(ArgAction::SetTrue)
 }
