@@ -1061,7 +1061,7 @@ checksum = "f92be4933c13fd498862a9e02a3055f8a8d9c039ce33db97306fd5a6caa7f29b"
 
 [[package]]
 name = "libnginx-wrapper"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "rusqlite",
  "serde",
@@ -1165,7 +1165,7 @@ dependencies = [
 
 [[package]]
 name = "nginx-api"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "actix-cors",
  "actix-jwt-auth-middleware",
@@ -1181,7 +1181,7 @@ dependencies = [
 
 [[package]]
 name = "nginx-cli"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "clap",
  "libnginx-wrapper",
