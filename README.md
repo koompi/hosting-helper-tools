@@ -1,4 +1,4 @@
-# nginx-modules
+# NGINX-HELPER-TOOLS
 
 NginxModules is program to expose safe NGINX usage to REST API and CLI. NginxModule has 3 apps:
 
