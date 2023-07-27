@@ -18,4 +18,4 @@ coming soon!
 
 ## LibNGINX-Wrapper
 
-Libnginx-wrapper is written in Rust std and SQLITE Database. Libnginx-wrapper expose 1 Object with 3 public builtin functions, and 4 public free function as shown in [List](libnginx-wrapper/README.md)
+Libnginx-wrapper is written in Rust std and SQLITE Database. Libnginx-wrapper expose 1 Object with 3 public builtin functions, and 5 public free function as shown in [List](libnginx-wrapper/README.md)
