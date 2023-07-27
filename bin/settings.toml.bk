@@ -1,0 +1,12 @@
+hosting_addr = "localhost"
+hosting_port = "8080"
+production = false
+cors_allowed_addr = ["localhost", "www.koompi.com"]
+
+[[login_accounts]]
+username = "isaac"
+password = "123"
+
+[[login_accounts]]
+username = "john"
+password = "123"
