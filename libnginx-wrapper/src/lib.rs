@@ -31,6 +31,8 @@ pub fn init_migration(force: bool) {
             STREAM_SITES_PATH,
             REDIRECT_SITES_PATH,
             PROXY_SITES_PATH,
+            SPA_SITES_PATH,
+            FILE_SITES_PATH,
             NGINX_DEFAULT_CERT_PATH,
         ]
         .into_iter()
