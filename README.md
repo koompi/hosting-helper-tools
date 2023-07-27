@@ -12,6 +12,8 @@ NGINX-API is written in RUST Actix-web. NGINX-API expose [API List](nginx-api/RE
 
 ## NGINX-CLI
 
+NGINX-CLI is written in RUST CLAP-RS. NGINX-CLI [Help](nginx-cli/README.md)
+
 coming soon!
 
 ## LibNGINX-Wrapper
