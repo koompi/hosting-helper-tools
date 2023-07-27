@@ -7,7 +7,7 @@ pub(crate) fn match_del(matches: &ArgMatches) {
         .to_owned();
 
     if let Err((code, message)) = remove_nginx_conf(&domain_name) {
-        eprintln!("Error Code: {code}\nError Message: {message}");
+        eprintln!("Error {code}\nError Message: {message}");
     } else {
         println!("Successfully deleted {domain_name}")
     }

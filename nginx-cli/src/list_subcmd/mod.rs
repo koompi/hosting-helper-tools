@@ -6,7 +6,7 @@ mod all_arg;
 
 use super::{Arg, ArgAction, Command};
 
-pub(crate) fn print_subcmd() -> Command {
+pub(crate) fn list_subcmd() -> Command {
     Command::new("list")
         .short_flag('l')
         .long_flag("list")

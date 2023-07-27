@@ -28,10 +28,10 @@ pub(crate) fn match_add(matches: &ArgMatches) {
     let data = NginxObj::new(domain_name, target, feature);
 
     if let Err((code, message)) = data.verify() {
-        eprintln!("Error Code: {code}\nError Message: {message}");
+        eprintln!("Error {code}\nError Message: {message}");
     } else {
         if let Err((code, message)) = data.finish() {
-            eprintln!("Error Code: {code}\nError Message: {message}");
+            eprintln!("Error {code}\nError Message: {message}");
         } else {
             println!("Successfully added {}", data.get_server_name())
         };
