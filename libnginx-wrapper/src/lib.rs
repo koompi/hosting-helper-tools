@@ -1,8 +1,3 @@
-pub mod dbtools;
-pub mod fstools;
-pub mod http_server;
-pub mod templates;
-
 use std::process::Command;
 
 const PROGRAM_BASE_NAME: &str = "nginx";
@@ -14,6 +9,11 @@ const SPA_SITES_PATH: &str = "/etc/nginx/spa-sites";
 const FILE_SITES_PATH: &str = "/etc/nginx/file-sites";
 const NGINX_DEFAULT_CERT_PATH: &str = "/etc/nginx/ssl";
 const DATABASE_PATH: &str = "./libnginx-wrapper.db";
+
+pub mod dbtools;
+pub mod fstools;
+pub mod http_server;
+pub mod templates;
 
 fn restart_reload_service() {
     Command::new("systemctl")
