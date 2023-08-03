@@ -31,10 +31,10 @@ async fn login(
     }?;
 
     let acc_token = token_signer
-        .create_signed_token(&loggging_user, time::Duration::hours(1))
+        .create_signed_token(&loggging_user, chrono::Duration::hours(1))
         .unwrap();
     let ref_token = token_signer
-        .create_signed_token(&loggging_user, time::Duration::days(1))
+        .create_signed_token(&loggging_user, chrono::Duration::days(1))
         .unwrap();
     Ok(HttpResponse::Ok()
         .json(serde_json::json!({"refresh_token": ref_token, "access_token": acc_token})))
