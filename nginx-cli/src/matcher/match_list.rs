@@ -1,4 +1,4 @@
-use super::{nginx_ops::NginxFeatures, ArgMatches};
+use super::{nginx_features::NginxFeatures, ArgMatches};
 use libnginx_wrapper::dbtools::crud::{
     select_all_by_feature_from_tbl_nginxconf, select_all_from_tbl_nginxconf,
 };
@@ -20,7 +20,7 @@ pub(crate) fn match_list(matches: &ArgMatches) {
     let mut data_table = data.iter().map(|each| {
         Row::new(vec![
             Cell::new(each.get_server_name()),
-            Cell::new(each.get_target_site()),
+            Cell::new(each.get_target_site().to_string().as_ref()),
             Cell::new(each.get_feature().to_string().as_str()),
         ])
     }).collect::<Table>();

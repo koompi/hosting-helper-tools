@@ -9,6 +9,9 @@ mod matcher;
 use matcher::{match_add,match_del,match_list, match_force};
 
 fn main() {
+
+    libnginx_wrapper::init_migration(false);
+
     let matches = Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
         .version(env!("CARGO_PKG_VERSION"))
