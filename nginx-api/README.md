@@ -111,10 +111,32 @@ Response 200
 
 Body
 
+Use either appropriately
+
 ```json
 {
-  "server_name": "tellsela.com",
-  "target_site": "http://koompi.com",
+  "server_name": "forwarder.koompi.com",
+  "target_site": {
+    "qty": "Single",
+    "data": "http://localhost:8070"
+  },
+  "feature": "Redirect"
+}
+```
+
+**or**
+
+```json
+{
+  "server_name": "forwarder.koompi.com",
+  "target_site": {
+    "qty": "Multiple",
+    "data": [
+      "http://localhost:8080",
+      "http://localhost:8090",
+      "http://localhost:8070"
+    ]
+  },
   "feature": "Proxy"
 }
 ```
@@ -123,7 +145,7 @@ Body
 | ----------- | --------------------------------------------------------------------------------------- |
 | server_name | String: eg. rithy.org                                                                   |
 | target_site | String: eg. https://weteka.org/user/rithy                                               |
-| feature     | String: `Proxy` (forward without changing name) _or_ `Redirect` (forward changing name) |
+| feature     | String: `Proxy` (forward without changing name) _or_ `Redirect` (forward changing name) _or_ `FileHost` (host a file server) _or_ `SPA` (host single page application) |
 
 Response 200
 
@@ -140,8 +162,9 @@ Response 200
   - `THIS API TAKE LONG TIME`
   - `server_name` must be first DNS pointed to this nginx server IP before add, otherwise it will error certificate generation
   - `server_name` must not include SCHEMA and must not already existed
-  - `target_site` must be input in form of _SCHEMA://SUBDOMAIN.DOMAIN.TLD/WHATEVER_ otherwise it will error _BADREQUEST_
-  - `feature` is ENUM on the backend
+  - `target_site` must give `qty` in either _Single_ or _Multiple_, and data of _Single_ in a `String` while data of _Multiple_ is in a `String Array`
+  - each item in `target_site` must be input in form of _SCHEMA://SUBDOMAIN.DOMAIN.TLD/WHATEVER_ otherwise it will error _BADREQUEST_
+  - `feature` is **ENUM of Proxy, Redirect, FileHost, and SPA** on the backend
 
 ---
 

@@ -10,7 +10,7 @@ use actix_web::{
 };
 use libnginx_wrapper::{
     dbtools::crud::select_all_from_tbl_nginxconf,
-    http_server::nginx_ops::{remake_ssl, remove_nginx_conf, NginxObj},
+    http_server::{remake_ssl, remove_nginx_conf, nginx_obj::NginxObj},
 };
 
 // pub async fn default_route() -> Result<HttpResponse, ActixCustomError> {
@@ -48,11 +48,6 @@ pub async fn get_nginx_list() -> Result<HttpResponse, Error> {
 #[post("/nginx/add")]
 pub async fn post_add_nginx(args: Json<NginxObj>) -> Result<HttpResponse, ActixCustomError> {
     let args = args.into_inner();
-
-    match args.verify() {
-        Ok(()) => Ok(()),
-        Err((error_code, message)) => Err(ActixCustomError::new(error_code, message)),
-    }?;
 
     match args.finish() {
         Ok(()) => Ok(()),
