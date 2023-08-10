@@ -3,8 +3,7 @@
 ## Object Available
 
 - http_server::NginxObj 
-  - new(server_name, target_site, feature) -> NginxObj
-  - verify() -> Result
+  - new(server_name, target_site, feature) -> Result\<NginxObj>
   - finish(self) -> Result
 
 ## Function Available

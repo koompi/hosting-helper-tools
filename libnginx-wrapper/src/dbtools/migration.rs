@@ -14,7 +14,7 @@ pub(crate) fn db_migration(force: bool) {
         read_ops::read_nginx_dir().into_iter().for_each(|each| {
             insert_tbl_nginxconf(
                 each.get_server_name(),
-                each.get_target_site(),
+                each.get_target_site().to_string().as_str(),
                 each.get_feature().to_string().as_ref(),
             )
         });

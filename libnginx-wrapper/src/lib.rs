@@ -9,6 +9,12 @@ const SPA_SITES_PATH: &str = "/etc/nginx/spa-sites";
 const FILE_SITES_PATH: &str = "/etc/nginx/file-sites";
 const NGINX_DEFAULT_CERT_PATH: &str = "/etc/nginx/ssl";
 const DATABASE_PATH: &str = "./libnginx-wrapper.db";
+const SPECIAL_WEBSITE: [&str; 4] = [
+    "weteka.org",
+    "weteka.com",
+    "sala.moeys.gov.kh",
+    "saladigital.org",
+];
 
 pub mod dbtools;
 pub mod fstools;

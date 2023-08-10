@@ -1,6 +1,6 @@
 use super::{
     super::{PROXY_SITES_PATH, REDIRECT_SITES_PATH},
-    read_dir, BufReader, NginxFeatures, NginxObj, OpenOptions, Read,
+    read_dir, BufReader, NginxFeatures, NginxObj, OpenOptions, Read, TargetSite,
 };
 
 pub(crate) fn read_nginx_dir() -> Vec<NginxObj> {
@@ -33,26 +33,58 @@ fn read_nginx_from_dir(nginx_path: &str, feat_type: NginxFeatures) -> Vec<NginxO
 }
 
 fn extract_nginx_proxy(config: String) -> NginxObj {
-    let mut proxy_pass = String::new();
+    // let mut proxy_pass = String::new();
     let mut server_name = String::new();
-    config.lines().for_each(|each_line| {
-        let each_line = each_line.trim();
-        if each_line.contains("proxy_pass") {
-            proxy_pass = each_line
-                .split_whitespace()
-                .last()
-                .unwrap()
-                .replace(";", "");
-        } else if each_line.contains("server_name") {
-            server_name = each_line
-                .split_whitespace()
-                .last()
-                .unwrap()
-                .replace(";", "");
-        }
-    });
+    let mut protocol: String = String::new();
+    let mut upstream_data: Vec<String> = Vec::new();
+    let mut upstream_detected: Option<bool> = None;
+    config
+        .lines()
+        .map(|each_line| each_line.trim())
+        .for_each(|each_line| {
+            // Block of Code for filtering upstream server
+            {
+                if let Some(true) = upstream_detected {
+                    // println!("Line: {each_line}");
+                    if each_line == "}" {
+                        upstream_detected = Some(false);
+                    } else {
+                        upstream_data.push(
+                            each_line
+                                .split_ascii_whitespace()
+                                .last()
+                                .unwrap()
+                                .replace(";", ""),
+                        );
+                    }
+                }
+            }
 
-    NginxObj::new(server_name, proxy_pass, NginxFeatures::Proxy)
+            if upstream_detected == None {
+                if each_line.starts_with("upstream") {
+                    upstream_detected = Some(true);
+                }
+            } else if each_line.starts_with("server_name") {
+                server_name = each_line
+                    .split_whitespace()
+                    .last()
+                    .unwrap()
+                    .replace(";", "");
+            } else if each_line.starts_with("proxy_pass") {
+                protocol = each_line.replace("proxy_pass", "").trim().split("://").next().unwrap().to_string();
+            }
+        });
+
+    {
+        upstream_data = upstream_data.into_iter().map(|each| format!("{protocol}://{each}")).collect();
+        let server_name = server_name;
+        let target_site = match upstream_data.len() {
+            1 => TargetSite::Single(upstream_data.into_iter().next().unwrap()),
+            _ => TargetSite::Multiple(upstream_data),
+        };
+        let feature = NginxFeatures::Proxy;
+        NginxObj::new(server_name, target_site, feature).unwrap()
+    }
 }
 
 fn extract_nginx_redirect(config: String) -> NginxObj {
@@ -74,7 +106,12 @@ fn extract_nginx_redirect(config: String) -> NginxObj {
         }
     });
 
-    NginxObj::new(server_name, target_site, NginxFeatures::Redirect)
+    {
+        let server_name = server_name;
+        let target_site = TargetSite::Single(target_site);
+        let feature = NginxFeatures::Redirect;
+        NginxObj::new(server_name, target_site, feature).unwrap()
+    }
 }
 
 fn extract_nginx_filehost_and_spa(config: String, feature: NginxFeatures) -> NginxObj {
@@ -97,7 +134,12 @@ fn extract_nginx_filehost_and_spa(config: String, feature: NginxFeatures) -> Ngi
         }
     });
 
-    NginxObj::new(server_name, target_location, feature)
+    {
+        let server_name = server_name;
+        let target_site = TargetSite::Single(target_location);
+        let feature = feature;
+        NginxObj::new(server_name, target_site, feature).unwrap()
+    }
 }
 
 fn read_file(source_file: &str) -> String {

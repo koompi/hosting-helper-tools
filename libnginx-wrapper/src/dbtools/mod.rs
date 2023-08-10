@@ -3,7 +3,7 @@ pub(crate) mod migration;
 
 use super::{
     fstools::read_ops,
-    http_server::nginx_ops::{NginxFeatures, NginxObj},
+    http_server::{nginx_features::NginxFeatures, nginx_obj::NginxObj, target_site::TargetSite},
     DATABASE_PATH,
 };
 use rusqlite::{params, Connection};

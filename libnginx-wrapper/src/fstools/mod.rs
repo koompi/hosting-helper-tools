@@ -1,4 +1,4 @@
-use super::http_server::nginx_ops::{NginxObj, NginxFeatures};
+use super::http_server::{nginx_obj::NginxObj, nginx_features::NginxFeatures, target_site::TargetSite};
 use std::{
     fs::{read_dir, OpenOptions},
     io::{BufReader, Read, BufWriter, Write},

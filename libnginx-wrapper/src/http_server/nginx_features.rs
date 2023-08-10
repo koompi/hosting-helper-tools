@@ -1,0 +1,34 @@
+use super::{fmt, Deserialize, Serialize, FromStr};
+
+#[derive(Deserialize, Serialize)]
+pub enum NginxFeatures {
+    Redirect,
+    Proxy,
+    SPA,
+    FileHost,
+}
+
+impl fmt::Display for NginxFeatures {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            NginxFeatures::Proxy => write!(f, "Proxy"),
+            NginxFeatures::Redirect => write!(f, "Redirect"),
+            NginxFeatures::FileHost => write!(f, "FileHost"),
+            NginxFeatures::SPA => write!(f, "SPA"),
+        }
+    }
+}
+
+impl FromStr for NginxFeatures {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Proxy" | "proxy" => Ok(Self::Proxy),
+            "Redirect" | "redirect" => Ok(Self::Redirect),
+            "FileHost" | "filehost" => Ok(Self::FileHost),
+            "SPA" | "spa" => Ok(Self::SPA),
+            _ => Err(()),
+        }
+    }
+}

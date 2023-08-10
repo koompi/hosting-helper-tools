@@ -1,8 +1,7 @@
-use super::super::{PROXY_SITES_PATH, STREAM_SITES_PATH, REDIRECT_SITES_PATH, PROGRAM_BASE_NAME, NGINX_DEFAULT_CERT_PATH};
+use super::super::{SPA_SITES_PATH, FILE_SITES_PATH, PROXY_SITES_PATH, STREAM_SITES_PATH, REDIRECT_SITES_PATH, PROGRAM_BASE_NAME, NGINX_DEFAULT_CERT_PATH};
 
 pub(crate) fn gen_templ() -> String {
-    format!("
-user www-data;
+    format!("user www-data;
 worker_cpu_affinity auto;
 worker_processes auto;
 pid /run/{PROGRAM_BASE_NAME}.pid;
@@ -66,6 +65,8 @@ http {{
     include /etc/{PROGRAM_BASE_NAME}/conf.d/*.conf;
     include {PROXY_SITES_PATH}/*.conf;
     include {REDIRECT_SITES_PATH}/*.conf;
+    include {FILE_SITES_PATH}/*.conf;
+    include {SPA_SITES_PATH}/*.conf;
     server {{
         listen      80 default_server;
         server_name _;
