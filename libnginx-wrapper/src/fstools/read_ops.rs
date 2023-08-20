@@ -26,7 +26,8 @@ fn read_nginx_from_dir(nginx_path: &str, feat_type: NginxFeatures) -> Vec<NginxO
                 }
                 NginxFeatures::FileHost => {
                     extract_nginx_filehost_and_spa(read_file(source_file), NginxFeatures::FileHost)
-                }
+                },
+                _ => unreachable!()
             }
         })
         .collect::<Vec<NginxObj>>()

@@ -4,13 +4,13 @@ use super::{
     HttpResponse,
 };
 use actix_web::{
-    delete, get, post,
+    delete, get, post, put,
     web::{Data, Json},
     Error, HttpRequest,
 };
 use libnginx_wrapper::{
     dbtools::crud::select_all_from_tbl_nginxconf,
-    http_server::{remake_ssl, remove_nginx_conf, nginx_obj::NginxObj},
+    http_server::{remake_ssl, remove_nginx_conf, nginx_obj::NginxObj, target_site::TargetSite},
 };
 
 // pub async fn default_route() -> Result<HttpResponse, ActixCustomError> {
@@ -50,6 +50,19 @@ pub async fn post_add_nginx(args: Json<NginxObj>) -> Result<HttpResponse, ActixC
     let args = args.into_inner();
 
     match args.finish() {
+        Ok(()) => Ok(()),
+        Err((error_code, message)) => Err(ActixCustomError::new(error_code, message)),
+    }?;
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+#[put("/nginx/update/{server_name}")]
+pub async fn put_update_target_site(req: HttpRequest, target_site: Json<TargetSite>) -> Result<HttpResponse, ActixCustomError> {
+    let server_name = req.match_info().get("server_name").unwrap();
+    let target_site = target_site.into_inner();
+
+    match NginxObj::update_target(server_name, target_site) {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomError::new(error_code, message)),
     }?;

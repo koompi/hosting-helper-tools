@@ -1,11 +1,13 @@
 use super::{fmt, Deserialize, Serialize, FromStr};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Default)]
 pub enum NginxFeatures {
     Redirect,
     Proxy,
     SPA,
     FileHost,
+    #[default]
+    None
 }
 
 impl fmt::Display for NginxFeatures {
@@ -15,6 +17,7 @@ impl fmt::Display for NginxFeatures {
             NginxFeatures::Redirect => write!(f, "Redirect"),
             NginxFeatures::FileHost => write!(f, "FileHost"),
             NginxFeatures::SPA => write!(f, "SPA"),
+            NginxFeatures::None => write!(f, "None")
         }
     }
 }

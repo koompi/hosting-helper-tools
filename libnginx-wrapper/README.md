@@ -4,6 +4,7 @@
 
 - http_server::NginxObj 
   - new(server_name, target_site, feature) -> Result\<NginxObj>
+  - update_target(server_name, target_site) -> Result
   - finish(self) -> Result
 
 ## Function Available

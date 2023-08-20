@@ -32,7 +32,7 @@ pub fn remove_nginx_conf(server_name: &str) -> Result<(), (u16, String)> {
             Err(err) => Err((500, err.to_string())),
         }
     }
-    match dbtools::crud::select_one_from_tbl_nginxconf(server_name).get_feature() {
+    match dbtools::crud::select_one_from_tbl_nginxconf(server_name).unwrap().get_feature() {
         nginx_features::NginxFeatures::Proxy => {
             std::fs::remove_file(format!("{}/{}.conf", PROXY_SITES_PATH, server_name))
                 .or_else(|err| Err((500, err.to_string())))
@@ -48,7 +48,8 @@ pub fn remove_nginx_conf(server_name: &str) -> Result<(), (u16, String)> {
         nginx_features::NginxFeatures::FileHost => {
             std::fs::remove_file(format!("{}/{}.conf", FILE_SITES_PATH, server_name))
                 .or_else(|err| Err((500, err.to_string())))
-        }
+        },
+        _ => unreachable!()
     }?;
 
     rem_ssl(server_name)?;

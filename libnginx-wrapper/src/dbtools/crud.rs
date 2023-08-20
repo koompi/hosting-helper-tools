@@ -27,7 +27,7 @@ pub(crate) fn query_existence_from_tbl_nginxconf(server_name: &str) -> bool {
     rows.next().unwrap().unwrap().get::<usize, u64>(0).unwrap() != 0
 }
 
-pub(crate) fn select_one_from_tbl_nginxconf(server_name: &str) -> NginxObj {
+pub fn select_one_from_tbl_nginxconf(server_name: &str) -> Result<NginxObj, rusqlite::Error> {
     open_database()
         .prepare("SELECT ServerName,Target,Feature FROM tblNginxConf WHERE ServerName = ?1")
         .unwrap()
@@ -46,7 +46,7 @@ pub(crate) fn select_one_from_tbl_nginxconf(server_name: &str) -> NginxObj {
                 NginxObj::new_unchecked(server_name, target_site, feature)
             })
         })
-        .unwrap()
+        
 }
 
 pub fn select_all_from_tbl_nginxconf() -> Vec<NginxObj> {
@@ -97,13 +97,24 @@ pub fn select_all_by_feature_from_tbl_nginxconf(feature: &str) -> Vec<NginxObj> 
         .collect::<Vec<NginxObj>>()
 }
 
-pub(crate) fn insert_tbl_nginxconf(server_name: &str, proxy_pass: &str, feature: &str) {
+pub(crate) fn insert_tbl_nginxconf(server_name: &str, target: &str, feature: &str) {
     open_database()
         .execute(
             &format!(
                 "INSERT INTO tblNginxConf(ServerName, Target, Feature) VALUES(?1, json(?2), ?3);"
             ),
-            params![server_name, proxy_pass, feature],
+            params![server_name, target, feature],
+        )
+        .unwrap();
+}
+
+pub(crate) fn update_target_tbl_nginxconf(server_name: &str, target: &str) {
+    open_database()
+        .execute(
+            &format!(
+                "UPDATE tblNginxConf SET Target = json(?2) WHERE ServerName = ?1;"
+            ),
+            params![server_name, target],
         )
         .unwrap();
 }

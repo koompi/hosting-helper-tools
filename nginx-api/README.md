@@ -141,10 +141,12 @@ Use either appropriately
 }
 ```
 
-| Variable    | Data Type                                                                               |
-| ----------- | --------------------------------------------------------------------------------------- |
-| server_name | String: eg. rithy.org                                                                   |
-| target_site | String: eg. https://weteka.org/user/rithy                                               |
+| Variable    | Data Type                                                                                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| server_name | String: eg. rithy.org                                                                                                                                                  |
+| target_site | Object Target Site with 2 Variable data and qty (Quantity)                                                                                                             |
+| qty         | String: `Multiple` or `Single`                                                                                                                                         |
+| data        | String: eg. https://weteka.org/user/rithy or String Array: ["http://localhost:3030", "http://localhost:2345"]                                                          |
 | feature     | String: `Proxy` (forward without changing name) _or_ `Redirect` (forward changing name) _or_ `FileHost` (host a file server) _or_ `SPA` (host single page application) |
 
 Response 200
@@ -235,6 +237,48 @@ Response 200
 
 - Note:
   - This API is for forcing the APP to rebuild Database in case of mismatch between file in directory and database rows
+
+---
+
+</details>
+
+<details close="close">
+<summary><b>POST</b> /nginx/update/{server_name}</summary>
+
+---
+
+| Header      | Data Type              |
+| ----------- | ---------------------- |
+| server_name | String; eg: koompi.com |
+
+Body
+
+```json
+{
+  "qty": "Multiple",
+  "data": [
+    "http://localhost:8080",
+    "http://localhost:8090",
+    "http://localhost:8070"
+  ]
+}
+```
+
+| Variable | Data Type                                                                                                       |
+| -------- | --------------------------------------------------------------------------------------------------------------- |
+| qty      | String: `Multiple` or `Single`                                                                                  |
+| data     | String: eg. https://weteka.org/user/rithy or String Array: ["https://localhost:3030", "https://localhost:2345"] |
+
+Response 200
+
+```json
+
+```
+
+| Error | Body                   |
+| ----- | ---------------------- |
+| 400   | actual_error_goes_here |
+| 500   | actual_error_goes_here |
 
 ---
 

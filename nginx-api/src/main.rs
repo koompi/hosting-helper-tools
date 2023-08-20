@@ -104,7 +104,8 @@ async fn main() -> std::io::Result<()> {
                     .service(actix_api::api::post_add_nginx)
                     .service(actix_api::api::post_force_cert)
                     .service(actix_api::api::post_force_migration)
-                    .service(actix_api::api::delete_remove_nginx),
+                    .service(actix_api::api::delete_remove_nginx)
+                    .service(actix_api::api::put_update_target_site),
             )
             // .default_service(actix_api::api::default_route)
     })
