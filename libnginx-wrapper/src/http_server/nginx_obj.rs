@@ -205,7 +205,7 @@ impl NginxObj {
             .args(["-m","pi@koompi.com"])
             .arg("--reinstall")
             .arg("--expand")
-            .arg("--quiet")
+            // .arg("")
             .args(["-d", &self.server_name])
             .output()
         {
