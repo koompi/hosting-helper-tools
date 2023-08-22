@@ -86,9 +86,9 @@ impl NginxObj {
 
     pub fn finish(&self) -> Result<(), (u16, String)> {
         let destination_file = self.write_to_disk();
-        println!("{{");
         match self.make_ssl() {
-            Ok(()) => Ok({
+            Ok(()) => Ok({   
+                println!("OK");
                 restart_reload_service();
                 insert_tbl_nginxconf(
                     self.server_name.as_ref(),
@@ -97,6 +97,7 @@ impl NginxObj {
                 );
             }),
             Err(err) => Err({
+                println!("err");
                 std::fs::remove_file(destination_file).unwrap();
                 err
             }),
