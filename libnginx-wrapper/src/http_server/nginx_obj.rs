@@ -86,6 +86,7 @@ impl NginxObj {
 
     pub fn finish(&self) -> Result<(), (u16, String)> {
         let destination_file = self.write_to_disk();
+        println!("{{");
         match self.make_ssl() {
             Ok(()) => Ok({
                 restart_reload_service();
@@ -155,18 +156,10 @@ impl NginxObj {
                     _ => unreachable!(),
                 }?;
 
-                println!("{cpath}");
-
-
                 match std::path::Path::new(cpath).is_absolute() {
                     true => Ok(()),
                     false => Err((400, format!("Target Site Arg Error: Path not Absolute"))),
-                }?;
-
-                println!("Past");
-
-                Ok(())?
-
+                }?
             }
             _ => unreachable!(),
         }
