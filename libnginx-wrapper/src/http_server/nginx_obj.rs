@@ -202,7 +202,7 @@ impl NginxObj {
         match Command::new("certbot")
             .arg("--nginx")
             .arg("--agree-tos")
-            .args(["--email","pi@koompi.com"])
+            .args(["-m","pi@koompi.com"])
             .arg("--reinstall")
             .arg("--expand")
             .arg("--quiet")
