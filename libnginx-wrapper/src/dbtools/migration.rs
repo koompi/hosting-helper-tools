@@ -4,11 +4,24 @@ use super::{
 };
 
 pub(crate) fn db_migration(force: bool) {
+    let dbpath = match std::path::Path::new(DATABASE_PATH).is_absolute() {
+        true => DATABASE_PATH.to_owned(),
+        false => format!(
+            "{}/{DATABASE_PATH}",
+            std::env::current_exe()
+                .unwrap()
+                .parent()
+                .unwrap()
+                .to_str()
+                .unwrap()
+        ),
+    };
+
     if force {
-        std::fs::remove_file(DATABASE_PATH).unwrap();
+        std::fs::remove_file(&dbpath).unwrap();
     }
 
-    if !std::path::Path::new(DATABASE_PATH).exists() {
+    if !std::path::Path::new(&dbpath).exists() {
         create_tables();
 
         read_ops::read_nginx_dir().into_iter().for_each(|each| {

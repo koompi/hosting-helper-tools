@@ -11,7 +11,7 @@ use matcher::{match_add,match_del,match_list, match_force, match_update};
 
 fn main() {
 
-    // libnginx_wrapper::init_migration(false);
+    libnginx_wrapper::init_migration(false);
 
     let matches = Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
