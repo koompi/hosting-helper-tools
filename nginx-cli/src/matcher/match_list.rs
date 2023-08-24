@@ -6,7 +6,7 @@ use libnginx_wrapper::dbtools::crud::{
 use prettytable::{Cell, Row, Table};
 
 pub(crate) fn match_list(matches: &ArgMatches) {
-    let data = if matches.get_flag("proxy_feature") {
+    let mut data = if matches.get_flag("proxy_feature") {
         select_all_by_feature_from_tbl_nginxconf(&NginxFeatures::Proxy.to_string())
     } else if matches.get_flag("redirect_feature") {
         select_all_by_feature_from_tbl_nginxconf(&NginxFeatures::Redirect.to_string())
@@ -24,11 +24,16 @@ pub(crate) fn match_list(matches: &ArgMatches) {
         select_all_from_tbl_nginxconf()
     };
 
+    data.sort_by_key(|each|each.get_server_name().to_owned());
+
     let mut data_table = data
         .iter()
         .map(|each| {
             Row::new(vec![
-                Cell::new(each.get_server_name()),
+                Cell::new(match each.get_server_name().is_empty(){
+                    true => "Not Found",
+                    false => each.get_server_name()
+                }),
                 Cell::new(each.get_target_site().to_string().as_ref()),
                 Cell::new(each.get_feature().to_string().as_str()),
             ])
