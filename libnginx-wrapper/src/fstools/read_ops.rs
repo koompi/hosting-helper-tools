@@ -1,5 +1,5 @@
 use super::{
-    super::{PROXY_SITES_PATH, REDIRECT_SITES_PATH},
+    super::{PROXY_SITES_PATH, REDIRECT_SITES_PATH, SPA_SITES_PATH, FILE_SITES_PATH},
     read_dir, BufReader, NginxFeatures, NginxObj, OpenOptions, Read, TargetSite,
 };
 
@@ -15,14 +15,14 @@ pub(crate) fn read_nginx_dir() -> Vec<NginxObj> {
         NginxFeatures::Redirect,
     ));
     ngx_obj_vec.append(&mut read_nginx_from_dir(
-        REDIRECT_SITES_PATH,
+        SPA_SITES_PATH,
         NginxFeatures::SPA,
     ));
     ngx_obj_vec.append(&mut read_nginx_from_dir(
-        REDIRECT_SITES_PATH,
+        FILE_SITES_PATH,
         NginxFeatures::FileHost,
     ));
-    
+
     ngx_obj_vec
 }
 
