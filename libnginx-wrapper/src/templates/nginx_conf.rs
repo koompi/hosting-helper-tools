@@ -19,7 +19,7 @@ http {{
     ##
 
     charset utf-8;
-    sendfile on;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+    sendfile on;
     tcp_nopush on;
     tcp_nodelay on;
     types_hash_max_size 4096;

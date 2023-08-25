@@ -4,11 +4,25 @@ use super::{
 };
 
 pub(crate) fn read_nginx_dir() -> Vec<NginxObj> {
-    let mut ngx_obj_vec = read_nginx_from_dir(PROXY_SITES_PATH, NginxFeatures::Proxy);
+    let mut ngx_obj_vec = Vec::new();
+
+    ngx_obj_vec.append(&mut read_nginx_from_dir(
+        PROXY_SITES_PATH,
+        NginxFeatures::Proxy,
+    ));
     ngx_obj_vec.append(&mut read_nginx_from_dir(
         REDIRECT_SITES_PATH,
         NginxFeatures::Redirect,
     ));
+    ngx_obj_vec.append(&mut read_nginx_from_dir(
+        REDIRECT_SITES_PATH,
+        NginxFeatures::SPA,
+    ));
+    ngx_obj_vec.append(&mut read_nginx_from_dir(
+        REDIRECT_SITES_PATH,
+        NginxFeatures::FileHost,
+    ));
+    
     ngx_obj_vec
 }
 
@@ -26,8 +40,8 @@ fn read_nginx_from_dir(nginx_path: &str, feat_type: NginxFeatures) -> Vec<NginxO
                 }
                 NginxFeatures::FileHost => {
                     extract_nginx_filehost_and_spa(read_file(source_file), NginxFeatures::FileHost)
-                },
-                _ => unreachable!()
+                }
+                _ => unreachable!(),
             }
         })
         .collect::<Vec<NginxObj>>()
@@ -72,12 +86,21 @@ fn extract_nginx_proxy(config: String) -> NginxObj {
                     .unwrap()
                     .replace(";", "");
             } else if each_line.starts_with("proxy_pass") {
-                protocol = each_line.replace("proxy_pass", "").trim().split("://").next().unwrap().to_string();
+                protocol = each_line
+                    .replace("proxy_pass", "")
+                    .trim()
+                    .split("://")
+                    .next()
+                    .unwrap()
+                    .to_string();
             }
         });
 
     {
-        upstream_data = upstream_data.into_iter().map(|each| format!("{protocol}://{each}")).collect();
+        upstream_data = upstream_data
+            .into_iter()
+            .map(|each| format!("{protocol}://{each}"))
+            .collect();
         let server_name = server_name;
         let target_site = match upstream_data.len() {
             1 => TargetSite::Single(upstream_data.into_iter().next().unwrap()),
