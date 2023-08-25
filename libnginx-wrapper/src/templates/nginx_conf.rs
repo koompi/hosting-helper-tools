@@ -1,7 +1,8 @@
 use super::super::{SPA_SITES_PATH, FILE_SITES_PATH, PROXY_SITES_PATH, STREAM_SITES_PATH, REDIRECT_SITES_PATH, PROGRAM_BASE_NAME, NGINX_DEFAULT_CERT_PATH};
 
 pub(crate) fn gen_templ() -> String {
-    format!("worker_cpu_affinity auto;
+    format!("user root;
+worker_cpu_affinity auto;
 worker_processes auto;
 pid /run/{PROGRAM_BASE_NAME}.pid;
 include /etc/{PROGRAM_BASE_NAME}/modules-enabled/*.conf;
@@ -18,7 +19,7 @@ http {{
     ##
 
     charset utf-8;
-    sendfile on;
+    sendfile on;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
     tcp_nopush on;
     tcp_nodelay on;
     types_hash_max_size 4096;
