@@ -14,5 +14,5 @@ pub(crate) fn one_arg() -> [Arg; 2] {
         .required_unless_present_any(["redirect_feature", "proxy_feature", "spa_feature", "filehost_feature", "all_feature"])
         .action(ArgAction::Set)
         .num_args(1)
-        .help("Domain Name to receive ReverseProxy/Redirect/SPA/FileHost request from; eg: koompi.com")]
+        .help("Domain Name to search ReverseProxy/Redirect/SPA/FileHost for; eg: koompi.com")]
 }
