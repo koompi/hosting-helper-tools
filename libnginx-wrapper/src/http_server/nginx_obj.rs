@@ -9,8 +9,7 @@ use super::{
     templates::http_server::{
         gen_filehost_templ, gen_proxy_templ, gen_redirect_templ, gen_spa_templ,
     },
-    Command, Deserialize, Serialize, FILE_SITES_PATH, PROXY_SITES_PATH, REDIRECT_SITES_PATH,
-    SPA_SITES_PATH,
+    Command, Deserialize, Serialize
 };
 
 #[derive(Deserialize, Serialize, Default)]
@@ -157,6 +156,11 @@ impl NginxObj {
     }
 
     fn write_to_disk(&self) -> String {
+        let redirect_sites_path = dotenv::var("REDIRECT_SITES_PATH").unwrap();
+        let proxy_sites_path = dotenv::var("PROXY_SITES_PATH").unwrap();
+        let spa_sites_path = dotenv::var("SPA_SITES_PATH").unwrap();
+        let file_sites_path = dotenv::var("FILE_SITES_PATH").unwrap();
+
         let (config, destination_file) = match self.feature {
             NginxFeatures::Proxy => (
                 gen_proxy_templ(
@@ -168,28 +172,28 @@ impl NginxObj {
                     self.server_name.as_ref(),
                     &self.get_target_site_protocol(),
                 ),
-                format!("{}/{}.conf", PROXY_SITES_PATH, &self.server_name),
+                format!("{}/{}.conf", proxy_sites_path, &self.server_name),
             ),
             NginxFeatures::Redirect => (
                 gen_redirect_templ(
                     self.target_site.get_single_site(),
                     self.server_name.as_ref(),
                 ),
-                format!("{}/{}.conf", REDIRECT_SITES_PATH, &self.server_name),
+                format!("{}/{}.conf", redirect_sites_path, &self.server_name),
             ),
             NginxFeatures::SPA => (
                 gen_spa_templ(
                     self.target_site.get_single_site(),
                     self.server_name.as_ref(),
                 ),
-                format!("{}/{}.conf", SPA_SITES_PATH, &self.server_name),
+                format!("{}/{}.conf", spa_sites_path, &self.server_name),
             ),
             NginxFeatures::FileHost => (
                 gen_filehost_templ(
                     self.target_site.get_single_site(),
                     self.server_name.as_ref(),
                 ),
-                format!("{}/{}.conf", FILE_SITES_PATH, &self.server_name),
+                format!("{}/{}.conf", file_sites_path, &self.server_name),
             ),
             _ => unreachable!()
         };

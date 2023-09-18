@@ -1,7 +1,5 @@
 use super::{
-    dbtools, fstools, restart_reload_service, templates, Command, FILE_SITES_PATH,
-    PROXY_SITES_PATH, REDIRECT_SITES_PATH, SPA_SITES_PATH
-};
+    dbtools, fstools, restart_reload_service, templates, Command};
 use serde::{Deserialize, Serialize};
 use std::{fmt, str::FromStr};
 
@@ -10,6 +8,11 @@ pub mod nginx_obj;
 pub mod target_site;
 
 pub fn remove_nginx_conf(server_name: &str) -> Result<(), (u16, String)> {
+    let redirect_sites_path = dotenv::var("REDIRECT_SITES_PATH").unwrap();
+    let proxy_sites_path = dotenv::var("PROXY_SITES_PATH").unwrap();
+    let spa_sites_path = dotenv::var("SPA_SITES_PATH").unwrap();
+    let file_sites_path = dotenv::var("FILE_SITES_PATH").unwrap();
+
     match dbtools::crud::query_existence_from_tbl_nginxconf(server_name) {
         true => Ok(()),
         false => Err((400, String::from("Item doesn't exist"))),
@@ -34,21 +37,21 @@ pub fn remove_nginx_conf(server_name: &str) -> Result<(), (u16, String)> {
     }
     match dbtools::crud::select_one_from_tbl_nginxconf(server_name).unwrap().get_feature() {
         nginx_features::NginxFeatures::Proxy => {
-            std::fs::remove_file(format!("{}/{}.conf", PROXY_SITES_PATH, server_name))
+            std::fs::remove_file(format!("{}/{}.conf", proxy_sites_path, server_name))
                 .or_else(|err| Err((500, err.to_string())))
         }
         nginx_features::NginxFeatures::Redirect => {
-            std::fs::remove_file(format!("{}/{}.conf", REDIRECT_SITES_PATH, server_name))
+            std::fs::remove_file(format!("{}/{}.conf", redirect_sites_path, server_name))
                 .or_else(|err| Err((500, err.to_string())))
         }
         nginx_features::NginxFeatures::SPA => {
-            std::fs::remove_file(format!("{}/{}.conf", SPA_SITES_PATH, server_name))
+            std::fs::remove_file(format!("{}/{}.conf", spa_sites_path, server_name))
                 .or_else(|err| Err((500, err.to_string())))
         }
         nginx_features::NginxFeatures::FileHost => {
-            std::fs::remove_file(format!("{}/{}.conf", FILE_SITES_PATH, server_name))
+            std::fs::remove_file(format!("{}/{}.conf", file_sites_path, server_name))
                 .or_else(|err| Err((500, err.to_string())))
-        },
+        }
         _ => unreachable!()
     }?;
 

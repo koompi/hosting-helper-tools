@@ -10,7 +10,7 @@ use actix_web::{
 };
 use libnginx_wrapper::{
     dbtools::crud::select_all_from_tbl_nginxconf,
-    http_server::{remake_ssl, remove_nginx_conf, nginx_obj::NginxObj, target_site::TargetSite},
+    http_server::{nginx_obj::NginxObj, remake_ssl, remove_nginx_conf, target_site::TargetSite},
 };
 
 // pub async fn default_route() -> Result<HttpResponse, ActixCustomError> {
@@ -21,11 +21,10 @@ use libnginx_wrapper::{
 async fn login(
     token_signer: Data<actix_jwt_auth_middleware::TokenSigner<User, Ed25519>>,
     loggging_user: Json<User>,
-    all_login_account: Data<Vec<User>>,
 ) -> Result<HttpResponse, ActixCustomError> {
-    match all_login_account.iter().any(|each_item| {
-        each_item.username == loggging_user.username && each_item.password == loggging_user.password
-    }) {
+    match dotenv::var("USERNAME").unwrap() == loggging_user.username
+        && dotenv::var("PASSWORD").unwrap() == loggging_user.password
+    {
         true => Ok(()),
         false => Err(ActixCustomError::new(401, String::from("Unauthorised"))),
     }?;
@@ -58,7 +57,10 @@ pub async fn post_add_nginx(args: Json<NginxObj>) -> Result<HttpResponse, ActixC
 }
 
 #[put("/nginx/update/{server_name}")]
-pub async fn put_update_target_site(req: HttpRequest, target_site: Json<TargetSite>) -> Result<HttpResponse, ActixCustomError> {
+pub async fn put_update_target_site(
+    req: HttpRequest,
+    target_site: Json<TargetSite>,
+) -> Result<HttpResponse, ActixCustomError> {
     let server_name = req.match_info().get("server_name").unwrap();
     let target_site = target_site.into_inner();
 

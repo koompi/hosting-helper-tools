@@ -1,21 +1,5 @@
 use std::process::Command;
 
-const PROGRAM_BASE_NAME: &str = "nginx";
-const PROGRAM_BASE_PATH: &str = "/etc/nginx";
-const STREAM_SITES_PATH: &str = "/etc/nginx/stream-sites";
-const REDIRECT_SITES_PATH: &str = "/etc/nginx/redirect-sites";
-const PROXY_SITES_PATH: &str = "/etc/nginx/proxy-sites";
-const SPA_SITES_PATH: &str = "/etc/nginx/spa-sites";
-const FILE_SITES_PATH: &str = "/etc/nginx/file-sites";
-const NGINX_DEFAULT_CERT_PATH: &str = "/etc/nginx/ssl";
-const DATABASE_PATH: &str = "./libnginx-wrapper.db";
-const SPECIAL_WEBSITE: [&str; 4] = [
-    "weteka.org",
-    "weteka.com",
-    "sala.moeys.gov.kh",
-    "saladigital.org",
-];
-
 pub mod dbtools;
 pub mod fstools;
 pub mod http_server;
@@ -24,29 +8,32 @@ pub mod templates;
 fn restart_reload_service() {
     Command::new("systemctl")
         .arg("reload-or-restart")
-        .arg(PROGRAM_BASE_NAME)
+        .arg(dotenv::var("PROGRAM_BASE_NAME").unwrap())
         .output()
         .unwrap();
 }
 
 pub fn init_migration(force: bool) {
     fn nginx_migration(force: bool) {
+        let program_base_path = dotenv::var("PROGRAM_BASE_PATH").unwrap();
+        let program_base_name = dotenv::var("PROGRAM_BASE_NAME").unwrap();
+        let nginx_default_cert_path = dotenv::var("NGINX_DEFAULT_CERT_PATH").unwrap();
         // Create All Necessary Directory
         [
-            PROGRAM_BASE_PATH,
-            STREAM_SITES_PATH,
-            REDIRECT_SITES_PATH,
-            PROXY_SITES_PATH,
-            SPA_SITES_PATH,
-            FILE_SITES_PATH,
-            NGINX_DEFAULT_CERT_PATH,
+            &program_base_path,
+            &dotenv::var("STREAM_SITES_PATH").unwrap(),
+            &dotenv::var("REDIRECT_SITES_PATH").unwrap(),
+            &dotenv::var("PROXY_SITES_PATH").unwrap(),
+            &dotenv::var("SPA_SITES_PATH").unwrap(),
+            &dotenv::var("FILE_SITES_PATH").unwrap(),
+            &nginx_default_cert_path,
         ]
         .into_iter()
         .for_each(|each| std::fs::create_dir_all(each).unwrap_or_default());
 
         // Make {PROGRAM_BASE_NAME}.conf
         self::fstools::write_ops::write_file(
-            format!("{PROGRAM_BASE_PATH}/{PROGRAM_BASE_NAME}.conf").as_str(),
+            format!("{program_base_path}/{program_base_name}.conf").as_str(),
             &self::templates::nginx_conf::gen_templ(),
             false,
         );
@@ -67,11 +54,11 @@ pub fn init_migration(force: bool) {
             ])
             .args([
                 "-keyout",
-                &format!("{NGINX_DEFAULT_CERT_PATH}/{PROGRAM_BASE_NAME}.key"),
+                &format!("{nginx_default_cert_path}/{program_base_name}.key"),
             ])
             .args([
                 "-out",
-                &format!("{NGINX_DEFAULT_CERT_PATH}/{PROGRAM_BASE_NAME}.crt"),
+                &format!("{nginx_default_cert_path}/{program_base_name}.crt"),
             ])
             .output()
             .unwrap();
@@ -113,6 +100,8 @@ pub fn init_migration(force: bool) {
             .output()
             .unwrap();
     }
+
+    dotenv::dotenv().ok();
 
     nginx_migration(force);
     systemd_migration();

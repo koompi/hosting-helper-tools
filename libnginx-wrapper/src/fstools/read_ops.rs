@@ -1,25 +1,28 @@
 use super::{
-    super::{PROXY_SITES_PATH, REDIRECT_SITES_PATH, SPA_SITES_PATH, FILE_SITES_PATH},
     read_dir, BufReader, NginxFeatures, NginxObj, OpenOptions, Read, TargetSite,
 };
 
 pub(crate) fn read_nginx_dir() -> Vec<NginxObj> {
     let mut ngx_obj_vec = Vec::new();
+    let redirect_sites_path = dotenv::var("REDIRECT_SITES_PATH").unwrap();
+    let proxy_sites_path = dotenv::var("PROXY_SITES_PATH").unwrap();
+    let spa_sites_path = dotenv::var("SPA_SITES_PATH").unwrap();
+    let file_sites_path = dotenv::var("FILE_SITES_PATH").unwrap();
 
     ngx_obj_vec.append(&mut read_nginx_from_dir(
-        PROXY_SITES_PATH,
+        &proxy_sites_path,
         NginxFeatures::Proxy,
     ));
     ngx_obj_vec.append(&mut read_nginx_from_dir(
-        REDIRECT_SITES_PATH,
+        &redirect_sites_path,
         NginxFeatures::Redirect,
     ));
     ngx_obj_vec.append(&mut read_nginx_from_dir(
-        SPA_SITES_PATH,
+        &spa_sites_path,
         NginxFeatures::SPA,
     ));
     ngx_obj_vec.append(&mut read_nginx_from_dir(
-        FILE_SITES_PATH,
+        &file_sites_path,
         NginxFeatures::FileHost,
     ));
 

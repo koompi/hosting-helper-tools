@@ -1,13 +1,14 @@
 use super::{
     crud::{create_tables, insert_tbl_nginxconf},
-    read_ops, DATABASE_PATH,
+    read_ops
 };
 
 pub(crate) fn db_migration(force: bool) {
-    let dbpath = match std::path::Path::new(DATABASE_PATH).is_absolute() {
-        true => DATABASE_PATH.to_owned(),
+    let database = dotenv::var("DATABASE_PATH").unwrap();
+    let dbpath = match std::path::Path::new(&database).is_absolute() {
+        true => database.to_owned(),
         false => format!(
-            "{}/{DATABASE_PATH}",
+            "{}/{database}",
             std::env::current_exe()
                 .unwrap()
                 .parent()

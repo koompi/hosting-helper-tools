@@ -1,11 +1,16 @@
-mod actix_api;
 use actix_jwt_auth_middleware::use_jwt::UseJWTOnApp;
 use actix_jwt_auth_middleware::{Authority, FromRequest, TokenSigner};
-use actix_web::{middleware, web::{scope, Data}, App, HttpServer};
+use actix_web::{
+    middleware,
+    web::scope,
+    App, HttpServer,
+};
 use ed25519_compact::{KeyPair, Seed};
 use jwt_compact::alg::Ed25519;
 use libnginx_wrapper::init_migration;
 use serde::{Deserialize, Serialize};
+
+mod actix_api;
 
 #[derive(Serialize, Deserialize, Debug, Clone, FromRequest)]
 struct User {
@@ -13,54 +18,21 @@ struct User {
     password: String,
 }
 
-#[derive(Deserialize, Clone)]
-struct EnvData {
-    hosting_addr: String,
-    hosting_port: String,
-    production: bool,
-    cors_allowed_addr: Vec<String>,
-    login_accounts: Vec<User>,
-}
-
-impl EnvData {
-    fn get_hosting_addr(&self) -> &str {
-        &self.hosting_addr
-    }
-    fn get_hosting_port(&self) -> &str {
-        &self.hosting_port
-    }
-    fn get_cors_allowed_addr(&self) -> &Vec<String> {
-        &self.cors_allowed_addr
-    }
-    fn get_production(&self) -> &bool {
-        &self.production
-    }
-    fn get_login_accounts(&self) -> &Vec<User> {
-        &self.login_accounts
-    }
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let key_pair = KeyPair::from_seed(Seed::generate());
-    let settings = config::Config::builder()
-        .add_source(config::File::with_name("./settings.toml"))
-        .build()
-        .unwrap()
-        .try_deserialize::<EnvData>()
-        .unwrap();
 
-    let hosting = format!(
-        "{}:{}",
-        settings.get_hosting_addr(),
-        settings.get_hosting_port()
-    );
+    dotenv::dotenv().ok();
+
+    let key_pair = KeyPair::from_seed(Seed::generate());
+    let hosting_addr = dotenv::var("HOSTING_ADDR").unwrap();
+    let hosting_port = dotenv::var("HOSTING_PORT").unwrap();
+    let hosting = format!("{hosting_addr}:{hosting_port}");
 
     init_migration(false);
 
     let server = HttpServer::new(move || {
-        let cors_allowed_addr = settings.get_cors_allowed_addr().clone();
-        let production = *settings.get_production();
+        let cors_allowed_addr = dotenv::var("CORS_ALLOWED_ADDR").unwrap();
+        let production = dotenv::var("PRODUCTION").unwrap().parse::<bool>().unwrap();
         let authority = Authority::<User, Ed25519, _, _>::new()
             .refresh_authorizer(|| async move { Ok(()) })
             .token_signer(Some(
@@ -84,7 +56,7 @@ async fn main() -> std::io::Result<()> {
                 actix_cors::Cors::default()
                     .allowed_origin_fn(move |origin, _req_head| match production {
                         true => cors_allowed_addr
-                            .iter()
+                            .split(",")
                             .any(|item| origin.as_bytes() == item.as_bytes()),
                         false => true,
                     })
@@ -94,7 +66,6 @@ async fn main() -> std::io::Result<()> {
                     .allow_any_origin()
                     .supports_credentials(),
             )
-            .app_data(Data::new(settings.get_login_accounts().to_owned()))
             .wrap(middleware::Logger::default())
             .service(actix_api::api::login)
             .use_jwt(
@@ -107,7 +78,7 @@ async fn main() -> std::io::Result<()> {
                     .service(actix_api::api::delete_remove_nginx)
                     .service(actix_api::api::put_update_target_site),
             )
-            // .default_service(actix_api::api::default_route)
+        // .default_service(actix_api::api::default_route)
     })
     .bind(&hosting)?;
     println!("Server Running at {hosting}");

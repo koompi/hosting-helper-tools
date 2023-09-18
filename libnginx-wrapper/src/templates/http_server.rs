@@ -1,5 +1,3 @@
-use super::super::SPECIAL_WEBSITE;
-
 pub(crate) fn gen_proxy_templ(
     proxy_pass: Vec<String>,
     server_name: &str,
@@ -15,7 +13,7 @@ pub(crate) fn gen_proxy_templ(
         .filter(|each| {
             let url_pre = url::Url::parse(&each).unwrap();
             let url_parsed = url_pre.domain().unwrap();
-            SPECIAL_WEBSITE.iter().any(|each| each.contains(url_parsed))
+            dotenv::var("SPECIAL_SITES").unwrap().split(",").any(|each| each.contains(url_parsed))
         })
         .next()
         .unwrap_or(String::from("$host"));

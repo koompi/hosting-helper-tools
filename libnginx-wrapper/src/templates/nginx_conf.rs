@@ -1,11 +1,17 @@
-use super::super::{SPA_SITES_PATH, FILE_SITES_PATH, PROXY_SITES_PATH, STREAM_SITES_PATH, REDIRECT_SITES_PATH, PROGRAM_BASE_NAME, NGINX_DEFAULT_CERT_PATH};
-
 pub(crate) fn gen_templ() -> String {
+    let program_base_name = dotenv::var("PROGRAM_BASE_NAME").unwrap();
+    let nginx_default_cert_path = dotenv::var("NGINX_DEFAULT_CERT_PATH").unwrap();
+    let stream_sites_path = dotenv::var("STREAM_SITES_PATH").unwrap();
+    let redirect_sites_path = dotenv::var("REDIRECT_SITES_PATH").unwrap();
+    let proxy_sites_path = dotenv::var("PROXY_SITES_PATH").unwrap();
+    let spa_sites_path = dotenv::var("SPA_SITES_PATH").unwrap();
+    let file_sites_path = dotenv::var("FILE_SITES_PATH").unwrap();
+
     format!("user root;
 worker_cpu_affinity auto;
 worker_processes auto;
-pid /run/{PROGRAM_BASE_NAME}.pid;
-include /etc/{PROGRAM_BASE_NAME}/modules-enabled/*.conf;
+pid /run/{program_base_name}.pid;
+include /etc/{program_base_name}/modules-enabled/*.conf;
 
 events {{
     worker_connections 1024;
@@ -29,7 +35,7 @@ http {{
     # server_names_hash_bucket_size 64;
     # server_name_in_redirect off;
 
-    include /etc/{PROGRAM_BASE_NAME}/mime.types;
+    include /etc/{program_base_name}/mime.types;
     default_type application/octet-stream;
 
     ##
@@ -43,8 +49,8 @@ http {{
     # Logging Settings
     ##
 
-    access_log /var/log/{PROGRAM_BASE_NAME}/access.log;
-    error_log /var/log/{PROGRAM_BASE_NAME}/error.log;
+    access_log /var/log/{program_base_name}/access.log;
+    error_log /var/log/{program_base_name}/error.log;
 
     ##
     # Gzip Settings
@@ -62,11 +68,11 @@ http {{
     ##
     # Virtual Host Configs
     ##
-    include /etc/{PROGRAM_BASE_NAME}/conf.d/*.conf;
-    include {PROXY_SITES_PATH}/*.conf;
-    include {REDIRECT_SITES_PATH}/*.conf;
-    include {FILE_SITES_PATH}/*.conf;
-    include {SPA_SITES_PATH}/*.conf;
+    include /etc/{program_base_name}/conf.d/*.conf;
+    include {proxy_sites_path}/*.conf;
+    include {redirect_sites_path}/*.conf;
+    include {file_sites_path}/*.conf;
+    include {spa_sites_path}/*.conf;
     server {{
         listen      80 default_server;
         server_name _;
@@ -75,8 +81,8 @@ http {{
     server {{
         listen 443 ssl;
         server_name _;
-        ssl_certificate {NGINX_DEFAULT_CERT_PATH}/{PROGRAM_BASE_NAME}.crt;
-        ssl_certificate_key {NGINX_DEFAULT_CERT_PATH}/{PROGRAM_BASE_NAME}.key;
+        ssl_certificate {nginx_default_cert_path}/{program_base_name}.crt;
+        ssl_certificate_key {nginx_default_cert_path}/{program_base_name}.key;
         return       444;
     }}
 
@@ -87,9 +93,9 @@ stream {{
                      '$protocol $status $bytes_sent $bytes_received '
                      '$session_time';
 
-    access_log  /var/log/{PROGRAM_BASE_NAME}/access.log basic;
-    error_log  /var/log/{PROGRAM_BASE_NAME}/error.log debug;
+    access_log  /var/log/{program_base_name}/access.log basic;
+    error_log  /var/log/{program_base_name}/error.log debug;
     
-    include {STREAM_SITES_PATH}/*.conf;
+    include {stream_sites_path}/*.conf;
 }}")
 }

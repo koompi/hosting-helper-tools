@@ -1,4 +1,3 @@
-/target
-/settings.toml
-/bin/settings.toml
-/bin/libnginx-wrapper.db
+**/target
+**/.env
+**/*.db

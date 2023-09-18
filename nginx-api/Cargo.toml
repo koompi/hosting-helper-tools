@@ -15,5 +15,6 @@ serde_json = "*"
 jwt-compact = { version = "*", features = ["ed25519-compact"] }
 ed25519-compact = "*"
 chrono = "*"
+dotenv = "*"
 
 libnginx-wrapper = { path = "../libnginx-wrapper" }
