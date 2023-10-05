@@ -39,7 +39,7 @@ pub fn init_migration(force: bool) {
         );
 
         // Read all configuration into DB
-        self::dbtools::migration::db_migration(force);
+        self::dbtools::db_migration(force);
 
         // Make Certificate for Any websites query that doesn't exist
         Command::new("openssl")

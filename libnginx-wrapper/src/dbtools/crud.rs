@@ -1,20 +1,6 @@
 use std::str::FromStr;
-
-use super::{open_database, params, NginxFeatures, NginxObj, TargetSite};
-
-pub(crate) fn create_tables() {
-    open_database()
-        .execute_batch(
-            "BEGIN;
-CREATE TABLE tblNginxConf(
-    ServerName VARCHAR(100) NOT NULL UNIQUE PRIMARY KEY,
-    Target JSON,
-    Feature VARCHAR(100) NOT NULL
-);
-COMMIT;",
-        )
-        .unwrap();
-}
+use libdatabase::params;
+use super::{open_database, NginxFeatures, NginxObj, TargetSite};
 
 pub(crate) fn query_existence_from_tbl_nginxconf(server_name: &str) -> bool {
     let connection = super::open_database();
@@ -27,7 +13,7 @@ pub(crate) fn query_existence_from_tbl_nginxconf(server_name: &str) -> bool {
     rows.next().unwrap().unwrap().get::<usize, u64>(0).unwrap() != 0
 }
 
-pub fn select_one_from_tbl_nginxconf(server_name: &str) -> Result<NginxObj, rusqlite::Error> {
+pub fn select_one_from_tbl_nginxconf(server_name: &str) -> Result<NginxObj, libdatabase::Error> {
     open_database()
         .prepare("SELECT ServerName,Target,Feature FROM tblNginxConf WHERE ServerName = ?1")
         .unwrap()

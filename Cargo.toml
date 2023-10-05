@@ -1,6 +1,6 @@
 [workspace]
 members=[
-    "libnginx-wrapper", "nginx-cli", "nginx-api"
+    "libnginx-wrapper", "nginx-cli", "nginx-api", "libcloudflare-wrapper", "libdatabase"
 ]
 
 [profile.dev]

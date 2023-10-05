@@ -2,7 +2,7 @@ use super::{
     read_dir, BufReader, NginxFeatures, NginxObj, OpenOptions, Read, TargetSite,
 };
 
-pub(crate) fn read_nginx_dir() -> Vec<NginxObj> {
+pub fn read_nginx_dir() -> Vec<NginxObj> {
     let mut ngx_obj_vec = Vec::new();
     let redirect_sites_path = dotenv::var("REDIRECT_SITES_PATH").unwrap();
     let proxy_sites_path = dotenv::var("PROXY_SITES_PATH").unwrap();

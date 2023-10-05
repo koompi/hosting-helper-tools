@@ -1,16 +1,16 @@
 [package]
-name = "libnginx-wrapper"
-version = "1.0.0"
+name = "libcloudflare-wrapper"
+version = "0.1.0"
 edition = "2021"
-authors = ["isaacjacksonreay@gmail.com"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+dotenv = "*"
+reqwest = { version = "*", features = ["blocking"] }
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
-url = "*"
-dotenv = "*"
+chrono = "*"
+tldextract = "*"
 
 libdatabase = { path = "../libdatabase" }
-libcloudflare-wrapper = { path = "../libcloudflare-wrapper"}
