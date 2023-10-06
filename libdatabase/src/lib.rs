@@ -22,6 +22,18 @@ pub fn open_database() -> Connection {
     .unwrap()
 }
 
+pub fn read_dotenv() {
+    dotenv::from_path(format!(
+        "{}/.env",
+        std::env::current_exe()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_str()
+            .unwrap()
+    )).unwrap()
+}
+
 pub(crate) fn create_tables(db: Option<DBClient>) {
     let batch_str = vec![
         "BEGIN;",

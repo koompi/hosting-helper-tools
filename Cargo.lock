@@ -1409,6 +1409,7 @@ dependencies = [
  "dotenv",
  "ed25519-compact",
  "jwt-compact",
+ "libdatabase",
  "libnginx-wrapper",
  "serde",
  "serde_json",

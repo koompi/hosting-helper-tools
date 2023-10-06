@@ -21,15 +21,7 @@ struct User {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
-    dotenv::from_path(format!(
-        "{}/.env",
-        std::env::current_exe()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .to_str()
-            .unwrap()
-    )).unwrap();
+    libdatabase::read_dotenv();
 
     let key_pair = KeyPair::from_seed(Seed::generate());
     let hosting_addr = dotenv::var("HOSTING_ADDR").unwrap();

@@ -10,15 +10,7 @@ mod matcher;
 use matcher::{match_add,match_del,match_list, match_force, match_update};
 
 fn main() {
-    dotenv::from_path(format!(
-        "{}/.env",
-        std::env::current_exe()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .to_str()
-            .unwrap()
-    )).unwrap();
+    libdatabase::read_dotenv();
 
     libnginx_wrapper::init_migration(false).unwrap();
     libcloudflare_wrapper::db_migration(false).unwrap();
