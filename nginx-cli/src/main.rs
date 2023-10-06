@@ -2,18 +2,20 @@ use clap::{Arg, ArgAction, Command};
 
 mod add_subcmd;
 mod del_subcmd;
-mod list_subcmd;
 mod force_subcmd;
-mod update_cmd;
+mod list_subcmd;
 mod matcher;
+mod update_cmd;
 
-use matcher::{match_add,match_del,match_list, match_force, match_update};
+use matcher::{match_add, match_del, match_force, match_list, match_update};
 
 fn main() {
     libdatabase::read_dotenv();
 
-    libnginx_wrapper::init_migration(false).unwrap();
-    libcloudflare_wrapper::db_migration(false).unwrap();
+    libnginx_wrapper::init_migration(false)
+        .unwrap_or_else(|err| eprintln!("Error Migration {}: {}", err.0, err.1));
+    libcloudflare_wrapper::db_migration(false)
+        .unwrap_or_else(|err| eprintln!("Error Migration {}: {}", err.0, err.1));
 
     let matches = Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
@@ -34,6 +36,6 @@ fn main() {
         Some(("list", list_matches)) => match_list::match_list(list_matches),
         Some(("force", force_matches)) => match_force::match_force(force_matches),
         Some(("update", update_matches)) => match_update::match_update(update_matches),
-        _ => unreachable!()
+        _ => unreachable!(),
     }
 }
