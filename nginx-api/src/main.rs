@@ -36,7 +36,7 @@ async fn main() -> std::io::Result<()> {
     let hosting_port = dotenv::var("HOSTING_PORT").unwrap();
     let hosting = format!("{hosting_addr}:{hosting_port}");
 
-    init_migration(false);
+    init_migration(false).unwrap();
 
     let server = HttpServer::new(move || {
         let cors_allowed_addr = dotenv::var("CORS_ALLOWED_ADDR").unwrap();

@@ -13,8 +13,8 @@ fn restart_reload_service() {
         .unwrap();
 }
 
-pub fn init_migration(force: bool) {
-    fn nginx_migration(force: bool) {
+pub fn init_migration(force: bool) -> Result<(), (u16, String)>{
+    fn nginx_migration(force: bool) -> Result<(), (u16, String)> {
         let program_base_path = dotenv::var("PROGRAM_BASE_PATH").unwrap();
         let program_base_name = dotenv::var("PROGRAM_BASE_NAME").unwrap();
         let nginx_default_cert_path = dotenv::var("NGINX_DEFAULT_CERT_PATH").unwrap();
@@ -36,7 +36,7 @@ pub fn init_migration(force: bool) {
             format!("{program_base_path}/{program_base_name}.conf").as_str(),
             &self::templates::nginx_conf::gen_templ(),
             false,
-        );
+        )?;
 
         // Read all configuration into DB
         self::dbtools::db_migration(force);
@@ -64,10 +64,10 @@ pub fn init_migration(force: bool) {
             .unwrap();
 
         // Reload service
-        restart_reload_service();
+        Ok(restart_reload_service())
     }
 
-    fn systemd_migration() {
+    fn systemd_migration() -> Result<(), (u16, String)> {
         let service_name = "renew_certbot";
         let service_path = format!("/etc/systemd/system/{service_name}.service");
         let timer_path = format!("/etc/systemd/system/daily@{service_name}.timer");
@@ -77,14 +77,14 @@ pub fn init_migration(force: bool) {
             &service_path,
             &self::templates::systemd_file::gen_service_template(),
             false,
-        );
+        )?;
 
         // Write Timer file
         self::fstools::write_ops::write_file(
             &timer_path,
             &self::templates::systemd_file::gen_timer_template(),
             false,
-        );
+        )?;
 
         // Reload systemd
         Command::new("systemctl")
@@ -99,10 +99,13 @@ pub fn init_migration(force: bool) {
             .arg(timer_path)
             .output()
             .unwrap();
+
+        Ok(())
     }
 
     dotenv::dotenv().ok();
 
-    nginx_migration(force);
-    systemd_migration();
+    nginx_migration(force)?;
+    systemd_migration()?;
+    Ok(())
 }

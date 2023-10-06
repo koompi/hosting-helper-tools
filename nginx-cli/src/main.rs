@@ -19,8 +19,8 @@ fn main() {
             .to_str()
             .unwrap()
     )).unwrap();
-    
-    libnginx_wrapper::init_migration(false);
+
+    libnginx_wrapper::init_migration(false).unwrap();
     libcloudflare_wrapper::db_migration(false).unwrap();
 
     let matches = Command::new(env!("CARGO_PKG_NAME"))

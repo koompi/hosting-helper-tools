@@ -92,7 +92,10 @@ pub async fn post_force_cert(req: HttpRequest) -> Result<HttpResponse, ActixCust
 
 #[post("/migration/force")]
 pub async fn post_force_migration() -> Result<HttpResponse, Error> {
-    init_migration(true);
+    match init_migration(true) {
+        Ok(()) => Ok(()),
+        Err((error_code, message)) => Err(ActixCustomError::new(error_code, message)),
+    }?;
     Ok(HttpResponse::Ok().finish())
 }
 

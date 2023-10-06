@@ -11,7 +11,9 @@ pub(crate) fn match_force(matches: &ArgMatches) {
             Err((code, message)) => eprintln!("Error {code}: {message}"),
         }
     } else if matches.get_flag("db_migration") {
-        libnginx_wrapper::init_migration(true);
-        println!("Finished!")
+        match libnginx_wrapper::init_migration(true) {
+            Ok(()) => println!("Finished!"),
+            Err((code, message)) => eprintln!("Error {code}: {message}"),
+        };
     }
 }

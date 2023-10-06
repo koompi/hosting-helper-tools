@@ -85,7 +85,7 @@ impl NginxObj {
 
     pub fn finish(&self) -> Result<(), (u16, String)> {
         libcloudflare_wrapper::setup_domain(&self.get_server_name())?;
-        let destination_file = self.write_to_disk();
+        let destination_file = self.write_to_disk()?;
         match self.make_ssl() {
             Ok(()) => Ok({
                 restart_reload_service();
@@ -166,7 +166,7 @@ impl NginxObj {
         Ok(())
     }
 
-    fn write_to_disk(&self) -> String {
+    fn write_to_disk(&self) -> Result<String, (u16, String)> {
         let redirect_sites_path = dotenv::var("REDIRECT_SITES_PATH").unwrap();
         let proxy_sites_path = dotenv::var("PROXY_SITES_PATH").unwrap();
         let spa_sites_path = dotenv::var("SPA_SITES_PATH").unwrap();
@@ -208,8 +208,8 @@ impl NginxObj {
             ),
             _ => unreachable!(),
         };
-        write_file(&destination_file, &config, false);
-        destination_file
+        write_file(&destination_file, &config, false)?;
+        Ok(destination_file)
     }
 
     fn make_ssl(&self) -> Result<(), (u16, String)> {
