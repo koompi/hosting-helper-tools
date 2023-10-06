@@ -2,19 +2,7 @@
 members=[
     "libnginx-wrapper", "nginx-cli", "nginx-api", "libcloudflare-wrapper", "libdatabase"
 ]
-
-[profile.dev]
-opt-level = 0
-debug = true
-split-debuginfo = "packed"
-debug-assertions = true
-overflow-checks = true
-lto = "off"
-panic = 'unwind'
-incremental = true
-codegen-units = 256
-rpath = false
-
+resolver = "2"
 
 [profile.release]
 opt-level = 3

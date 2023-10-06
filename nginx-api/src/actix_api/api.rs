@@ -48,6 +48,12 @@ pub async fn get_nginx_list() -> Result<HttpResponse, Error> {
 pub async fn post_add_nginx(args: Json<NginxObj>) -> Result<HttpResponse, ActixCustomError> {
     let args = args.into_inner();
 
+    match args.verify() {
+        Ok(()) => Ok(()),
+        Err((error_code, message)) => Err(ActixCustomError::new(error_code, message)),
+    }?;
+
+
     match args.finish() {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomError::new(error_code, message)),

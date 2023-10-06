@@ -103,7 +103,7 @@ impl NginxObj {
         Ok(())
     }
 
-    fn verify(&self) -> Result<(), (u16, String)> {
+    pub fn verify(&self) -> Result<(), (u16, String)> {
         fn parse_target_site(singletarget: &str) -> Result<(), (u16, String)> {
             match Url::parse(singletarget) {
                 Ok(_) => Ok(()),
