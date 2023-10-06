@@ -10,6 +10,7 @@ authors = ["IsaacJReay <isaacjacksonreay@gmail.com>", "KOOMPI Development Team"]
 [dependencies]
 clap = "*"
 prettytable = "*"
-
+dotenv = "*"
 libnginx-wrapper = { path = "../libnginx-wrapper" }
 libcloudflare-wrapper = { path = "../libcloudflare-wrapper" }
+libdatabase = { path = "../libdatabase" }
