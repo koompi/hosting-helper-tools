@@ -12,3 +12,4 @@ clap = "*"
 prettytable = "*"
 
 libnginx-wrapper = { path = "../libnginx-wrapper" }
+libcloudflare-wrapper = { path = "../libcloudflare-wrapper" }

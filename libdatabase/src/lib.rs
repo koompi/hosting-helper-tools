@@ -83,7 +83,6 @@ pub fn db_migration(db: DBClient, force: Option<DBClient>) -> Option<u8> {
                 DBClient::LibNginx => "BEGIN; DROP TABLE tblNginxConf; COMMIT;",
             })
             .unwrap();
-        // create_tables(Some(db));
     }
 
     match db {
@@ -94,15 +93,15 @@ pub fn db_migration(db: DBClient, force: Option<DBClient>) -> Option<u8> {
                 |data| data.get::<usize, usize>(0),
             )
             .unwrap()
-            != 2).then(|| {
+            != 2)
+            .then(|| {
                 create_tables(Some(DBClient::LibCloudflare));
                 Some(0)
-            })
-        ,
+            }),
         DBClient::LibNginx => (open_database()
             .query_row(
                 "SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name=?1",
-                params!["libNginxConf"],
+                params!["tblNginxConf"],
                 |data| data.get::<usize, usize>(0),
             )
             .unwrap()

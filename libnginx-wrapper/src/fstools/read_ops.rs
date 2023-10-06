@@ -63,7 +63,6 @@ fn extract_nginx_proxy(config: String) -> NginxObj {
             // Block of Code for filtering upstream server
             {
                 if let Some(true) = upstream_detected {
-                    // println!("Line: {each_line}");
                     if each_line == "}" {
                         upstream_detected = Some(false);
                     } else {

@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 mod actix_api;
 
-#[derive(Serialize, Deserialize, Debug, Clone, FromRequest)]
+#[derive(Serialize, Deserialize, Clone, FromRequest)]
 struct User {
     username: String,
     password: String,
@@ -78,7 +78,6 @@ async fn main() -> std::io::Result<()> {
                     .service(actix_api::api::delete_remove_nginx)
                     .service(actix_api::api::put_update_target_site),
             )
-        // .default_service(actix_api::api::default_route)
     })
     .bind(&hosting)?;
     println!("Server Running at {hosting}");

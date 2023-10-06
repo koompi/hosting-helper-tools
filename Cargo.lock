@@ -1419,6 +1419,7 @@ name = "nginx-cli"
 version = "1.0.0"
 dependencies = [
  "clap",
+ "libcloudflare-wrapper",
  "libnginx-wrapper",
  "prettytable",
 ]

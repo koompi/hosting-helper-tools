@@ -7,7 +7,7 @@ use serde::Deserialize;
 use zones::ZoneRes;
 use records::RecordsRes;
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Default)]
 #[serde(untagged)]
 pub enum ObjResult {
     ZonesData(Vec<ZoneRes>),
@@ -18,16 +18,16 @@ pub enum ObjResult {
     DNSRecord(RecordsRes)
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Default)]
 pub struct ObjMsg {
     pub code: i16,
     pub message: String,
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Default)]
 pub struct ObjErr(ObjMsg);
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Default)]
 pub struct ObjPageDetail {
     pub count: u8,
     pub page: u8,
@@ -35,12 +35,12 @@ pub struct ObjPageDetail {
     pub total_count: u8,
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Default)]
 pub struct ObjResponse {
     pub errors: Vec<ObjErr>,
     pub messages: Vec<ObjMsg>,
     pub success: bool,
-    pub result_info: ObjPageDetail,
+    pub result_info: Option<ObjPageDetail>,
     pub result: Option<ObjResult>,
 }
 

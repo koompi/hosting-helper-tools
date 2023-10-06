@@ -49,7 +49,7 @@ pub(crate) fn update_pending_tbl(
         .unwrap();
 }
 
-pub(crate) fn delete_from_tbl(server_name: &str, pendingtbl: bool) {
+pub(crate) fn _delete_from_tbl(server_name: &str, pendingtbl: bool, ) {
     open_database()
         .execute(
             &format!("DELETE FROM ?1 WHERE ServerName = ?2;"),
@@ -58,6 +58,17 @@ pub(crate) fn delete_from_tbl(server_name: &str, pendingtbl: bool) {
                     true => "tblCloudflarePending",
                     false => "tblCloudflareData",
                 },
+                server_name
+            ],
+        )
+        .unwrap();
+}
+
+pub(crate) fn delete_from_tblcloudflarepending(server_name: &str) {
+    open_database()
+        .execute(
+            &format!("DELETE FROM tblCloudflarePending WHERE ServerName = ?1;"),
+            params![
                 server_name
             ],
         )

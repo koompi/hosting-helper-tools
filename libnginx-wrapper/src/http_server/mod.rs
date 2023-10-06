@@ -17,7 +17,6 @@ pub fn remove_nginx_conf(server_name: &str) -> Result<(), (u16, String)> {
         false => Err((400, String::from("Item doesn't exist"))),
     }?;
 
-    dbtools::crud::delete_from_tbl_nginxconf(server_name);
 
     loop {
         let certbot_res = Command::new("certbot")
@@ -64,6 +63,8 @@ pub fn remove_nginx_conf(server_name: &str) -> Result<(), (u16, String)> {
         }
         nginx_features::NginxFeatures::None => Ok(()),
     };
+
+    dbtools::crud::delete_from_tbl_nginxconf(server_name);
 
     match fserror {
         Ok(()) => Ok(()),

@@ -1,20 +1,20 @@
 use super::Deserialize;
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Default)]
 pub struct ObjAcc {
     pub id: Option<String>,
     pub name: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Default)]
 pub struct ObjTenant(ObjAcc);
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Default)]
 pub struct ObjTenantUnit {
     pub id: Option<String>
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Default)]
 pub struct ObjPlan {
     pub id: String,
     pub name: String,
@@ -28,7 +28,7 @@ pub struct ObjPlan {
     pub externally_managed: bool
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Default)]
 pub struct ObjOwner {
     pub id: Option<String>,
     pub name: Option<String>,
@@ -36,7 +36,7 @@ pub struct ObjOwner {
     pub email: Option<String>
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Default)]
 pub struct ObjMeta {
     pub cdn_only: Option<bool>,
     pub custom_certificate_quota: u8,
@@ -47,7 +47,7 @@ pub struct ObjMeta {
     pub step: u8,
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Default)]
 pub struct ZoneRes {
     pub id: String,
     pub name: String,

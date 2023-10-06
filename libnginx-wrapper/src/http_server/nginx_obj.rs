@@ -208,7 +208,6 @@ impl NginxObj {
             ),
             _ => unreachable!(),
         };
-        // println!("{config}");
         write_file(&destination_file, &config, false);
         destination_file
     }

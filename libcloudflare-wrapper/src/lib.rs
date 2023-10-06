@@ -4,6 +4,7 @@ mod filtered_datatype;
 
 use chrono::{DateTime, NaiveTime, Utc};
 use cloudflare_datatype::{ObjResponse, ObjResult};
+use filtered_datatype::zones::CloudflarePending;
 use tldextract::TldOption;
 
 pub fn db_migration(force: bool) -> Result<(), (u16, String)> {
@@ -16,6 +17,7 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
         .extract(full_domain_name)
         .unwrap();
     let public_ip = reqwest::blocking::Client::builder()
+        .local_address("0.0.0.0".parse::<std::net::IpAddr>().unwrap())
         .build()
         .unwrap()
         .request(reqwest::Method::GET, "https://ip.me")
@@ -23,12 +25,13 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
         .unwrap()
         .text()
         .unwrap();
+    let public_ip = public_ip.trim_end();
     let subdomain = match tldextracted_domain.subdomain {
         Some(subdomain) => subdomain,
         None => String::from("@"),
     };
     let domain_tld =
-        tldextracted_domain.domain.unwrap() + tldextracted_domain.suffix.as_ref().unwrap();
+        tldextracted_domain.domain.unwrap() + "." + tldextracted_domain.suffix.as_ref().unwrap();
 
     match dbtools::read_ops::query_from_tbl_cloudflare_pending(&domain_tld) {
         Some(domain) => match domain.is_expired() {
@@ -38,8 +41,9 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
                     Some(data) => Err((
                         503,
                         format!(
-                            "Nameserver \n{}\nfor your domain has not yet been directed to our server", 
-                            data.get_new_dns().join("\n")
+                            "\n{}\nfor your domain has not yet been directed to our server", 
+                            CloudflarePending::format_dns_vec(data.get_new_dns())
+                            // data.get_new_dns().iter().map(|each| format!("\t- {}", each)).collect::<Vec<String>>().join("\n")
                         )
                     )),
                 },
@@ -48,8 +52,9 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
             false => Err((
                 503,
                 format!(
-                    "Nameserver \n{}\nfor your domain has not yet been directed to our server", 
-                    domain.get_new_dns().join("\n")
+                    "\n{}\nfor your domain has not yet been configured yet", 
+                    // domain.get_new_dns().iter().map(|each| format!("\t- {}", each)).collect::<Vec<String>>().join("\n")
+                    CloudflarePending::format_dns_vec(domain.get_new_dns())
                 )
             )),
         },
@@ -62,7 +67,7 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
                 let response = ObjResponse::get_records(data.get_zone_id(), Some(full_domain_name));
                 response.unwrap()?;
                 match response.is_empty() {
-                    true => ObjResponse::post_record(&subdomain, &public_ip, data.get_zone_id()),
+                    true => ObjResponse::post_record(&subdomain, public_ip, data.get_zone_id()),
                     false => match response.result.unwrap() {
                         ObjResult::DNSRecords(t) => {
                             let record = t
@@ -90,10 +95,10 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
                                 false => record.content.to_owned(),
                             };
 
-                            if &public_ip != &actual_ip {
+                            if public_ip != &actual_ip {
                                 ObjResponse::put_record(
                                     &subdomain,
-                                    &public_ip,
+                                    public_ip,
                                     data.get_zone_id(),
                                     &record.id,
                                 )
@@ -112,7 +117,8 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
         };
 
     match result_response.is_empty() {
-        true => {
+        true => Ok(()),
+        false => {
             match result_response.result.unwrap() {
                 ObjResult::ZoneData(zone) => Err({
                     let server_name = zone.name;
@@ -124,13 +130,13 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
 
                     let error_message = match zone.original_name_servers.as_ref() {
                         Some(dns) => format!(
-                            "Please remove these Nameserver \n{} at your Registra {} \nand replace with these Nameserver\n{}",
+                            "Please remove these \n{} at your Registra {} \nand replace with these \n{}",
                             dns.join("\n"),
                             zone.original_registrar.as_ref().unwrap_or(&String::new()),
                             &zone.name_servers.join("\n")
                         ),
                         None => format!(
-                            "Please replace your Nameserver at your Registra {} with \n {}", 
+                            "Please replace your Nameserver at your Registra {} with \n{}", 
                             &zone.original_registrar.as_ref().unwrap_or(&String::new()), &zone.name_servers.join("\n")
                         )
                     };
@@ -138,6 +144,7 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
                         .original_registrar
                         .as_deref()
                         .and_then(|data| data.split(",").next());
+
                     let last_check = chrono::Utc::now().to_rfc3339();
                     dbtools::write_ops::insert_tbl_cloudflare_pending(
                         &server_name,
@@ -149,9 +156,7 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
 
                     (
                         503,
-                        error_message, // String::from(
-                                       //     "NameServer for the domain has not yet been directed to our server",
-                                       // ),
+                        error_message, 
                     )
                 }),
                 ObjResult::DNSRecord(_) => {
@@ -163,7 +168,6 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
                 // ObjResult::ZonesData(_) => todo!(),
             }
         }
-        false => Ok(()),
     }?;
 
     Ok(())

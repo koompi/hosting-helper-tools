@@ -21,9 +21,10 @@ impl ObjResponse {
             Some(objresult) => match objresult {
                 ObjResult::ZonesData(vec_zone) => vec_zone.is_empty(),
                 ObjResult::DNSRecords(vec_rec) => vec_rec.is_empty(),
+                ObjResult::ZoneData(_) => false,
+                ObjResult::DNSRecord(_) => false,
                 _ => unreachable!()
-                // ObjResult::ZoneData(_) => unreachable!(),
-                // ObjResult::DNSRecord(_) => unreachable!(),
+
             }
             None => true
         }
