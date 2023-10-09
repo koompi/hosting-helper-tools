@@ -116,10 +116,7 @@ Use either appropriately
 ```json
 {
   "server_name": "forwarder.koompi.com",
-  "target_site": {
-    "qty": "Single",
-    "data": "http://localhost:8070"
-  },
+  "target_site": "http://localhost:8070",
   "feature": "Redirect"
 }
 ```
@@ -129,14 +126,11 @@ Use either appropriately
 ```json
 {
   "server_name": "forwarder.koompi.com",
-  "target_site": {
-    "qty": "Multiple",
-    "data": [
+  "target_site": [
       "http://localhost:8080",
       "http://localhost:8090",
       "http://localhost:8070"
-    ]
-  },
+    ],
   "feature": "Proxy"
 }
 ```
