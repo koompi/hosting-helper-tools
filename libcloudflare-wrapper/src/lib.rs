@@ -7,23 +7,25 @@ use cloudflare_datatype::{ObjResponse, ObjResult};
 use filtered_datatype::zones::CloudflarePending;
 use tldextract::TldOption;
 
-pub fn db_migration(force: bool) -> Result<(), (u16, String)> {
-    dbtools::db_migration(force)
+pub async fn db_migration(force: bool) -> Result<(), (u16, String)> {
+    dbtools::db_migration(force).await
 }
 
-pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
+pub async fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
     let tldextracted_domain = TldOption::default()
         .build()
         .extract(full_domain_name)
         .unwrap();
-    let public_ip = reqwest::blocking::Client::builder()
+    let public_ip = reqwest::Client::builder()
         .local_address("0.0.0.0".parse::<std::net::IpAddr>().unwrap())
         .build()
         .unwrap()
         .request(reqwest::Method::GET, "https://ip.me")
         .send()
+        .await
         .unwrap()
         .text()
+        .await
         .unwrap();
     let public_ip = public_ip.trim_end();
     let subdomain = match tldextracted_domain.subdomain {
@@ -35,7 +37,7 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
 
     match dbtools::read_ops::query_from_tbl_cloudflare_pending(&domain_tld) {
         Some(domain) => match domain.is_expired() {
-            true => match domain.recheck_pending_status() {
+            true => match domain.recheck_pending_status().await {
                 Ok(check) => match check {
                     None => Ok(()),
                     Some(data) => Err((
@@ -64,10 +66,10 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
     let result_response: ObjResponse =
         match dbtools::read_ops::query_from_tbl_cloudflare_data(&domain_tld) {
             Some(data) => {
-                let response = ObjResponse::get_records(data.get_zone_id(), Some(full_domain_name));
+                let response = ObjResponse::get_records(data.get_zone_id(), Some(full_domain_name)).await;
                 response.unwrap()?;
                 match response.is_empty() {
-                    true => ObjResponse::post_record(&subdomain, public_ip, data.get_zone_id()),
+                    true => ObjResponse::post_record(&subdomain, public_ip, data.get_zone_id()).await,
                     false => match response.result.unwrap() {
                         ObjResult::DNSRecords(t) => {
                             let record = t
@@ -80,7 +82,7 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
                                     let a_response = ObjResponse::get_records(
                                         data.get_zone_id(),
                                         Some(&record.content),
-                                    );
+                                    ).await;
                                     a_response.unwrap()?;
                                     match a_response.result.unwrap() {
                                         ObjResult::DNSRecords(result) => {
@@ -101,7 +103,7 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
                                     public_ip,
                                     data.get_zone_id(),
                                     &record.id,
-                                )
+                                ).await
                             } else {
                                 ObjResponse::default()
                             }
@@ -113,7 +115,7 @@ pub fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
                     },
                 }
             }
-            None => ObjResponse::post_zone(&domain_tld),
+            None => ObjResponse::post_zone(&domain_tld).await,
         };
 
     match result_response.is_empty() {

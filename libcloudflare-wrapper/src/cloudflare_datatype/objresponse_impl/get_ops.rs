@@ -1,7 +1,7 @@
 use super::ObjResponse;
 
 impl ObjResponse {
-    pub fn get_zone(domain_name: Option<&str>, pending_status: bool) -> Self {
+    pub async fn get_zone(domain_name: Option<&str>, pending_status: bool) -> Self {
         let client = Self::get_client();
         let headers = Self::get_headers();
         let url = match domain_name {
@@ -23,13 +23,13 @@ impl ObjResponse {
             .request(reqwest::Method::GET, url)
             .headers(headers.clone());
 
-        let response = request.send().unwrap();
-        let body = response.text().unwrap();
+        let response = request.send().await.unwrap();
+        let body = response.text().await.unwrap();
 
         serde_json::from_str::<Self>(&body).unwrap()
     }
 
-    pub fn get_records(zone_id: &str, full_domain_name: Option<&str>) -> Self {
+    pub async fn get_records(zone_id: &str, full_domain_name: Option<&str>) -> Self {
         let client = Self::get_client();
         let headers = Self::get_headers();
         let url = match full_domain_name {
@@ -41,8 +41,8 @@ impl ObjResponse {
             .request(reqwest::Method::GET, url)
             .headers(headers.clone());
 
-        let response = request.send().unwrap();
-        let body = response.text().unwrap();
+        let response = request.send().await.unwrap();
+        let body = response.text().await.unwrap();
 
         serde_json::from_str::<Self>(&body).unwrap()
     }

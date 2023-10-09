@@ -2,7 +2,7 @@ use super::{
     nginx_features::NginxFeatures, nginx_obj::NginxObj, target_site::TargetSite, ArgMatches,
 };
 
-pub(crate) fn match_add(matches: &ArgMatches) {
+pub(crate) async fn match_add(matches: &ArgMatches) {
     let domain_name = matches
         .get_one::<String>("domain_name")
         .expect("contains_id")
@@ -33,7 +33,7 @@ pub(crate) fn match_add(matches: &ArgMatches) {
         },
         feature,
     ) {
-        Ok(data_obj) => match data_obj.finish() {
+        Ok(data_obj) => match data_obj.finish().await {
             Ok(()) => println!("Successfully added {}", data_obj.get_server_name()),
             Err((code, message)) => eprintln!("Error {code}: {message}"),
         },

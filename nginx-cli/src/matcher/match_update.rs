@@ -1,6 +1,6 @@
 use super::{nginx_obj::NginxObj, ArgMatches, target_site::TargetSite};
 
-pub(crate) fn match_update(matches: &ArgMatches) {
+pub(crate) async fn match_update(matches: &ArgMatches) {
     let domain_name = matches
         .get_one::<String>("domain_name")
         .expect("contains_id")
@@ -18,7 +18,7 @@ pub(crate) fn match_update(matches: &ArgMatches) {
             1 => TargetSite::Single(target.iter().next().unwrap().to_string()),
             _ => TargetSite::Multiple(target),
         }
-    ) {
+    ).await {
         Ok(()) => println!("Successfully Updated {}", domain_name),
         Err((code, message)) => eprintln!("Error {code}: {message}"),
     }

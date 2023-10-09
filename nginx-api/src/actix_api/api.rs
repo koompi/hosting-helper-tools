@@ -54,7 +54,7 @@ pub async fn post_add_nginx(args: Json<NginxObj>) -> Result<HttpResponse, ActixC
     }?;
 
 
-    match args.finish() {
+    match args.finish().await {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomError::new(error_code, message)),
     }?;
@@ -70,7 +70,7 @@ pub async fn put_update_target_site(
     let server_name = req.match_info().get("server_name").unwrap();
     let target_site = target_site.into_inner();
 
-    match NginxObj::update_target(server_name, target_site) {
+    match NginxObj::update_target(server_name, target_site).await {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomError::new(error_code, message)),
     }?;

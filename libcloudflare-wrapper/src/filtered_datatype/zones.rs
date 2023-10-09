@@ -78,8 +78,8 @@ impl CloudflarePending {
         duration.num_minutes() >= dotenv::var("PENDING_CHECK_LIMIT").unwrap().parse().unwrap()
     }
 
-    pub fn recheck_pending_status(&self) -> Result<Option<Self>, (u16, String)> {
-        let res = ObjResponse::get_zone(Some(&self.get_server_name()), true);
+    pub async fn recheck_pending_status(&self) -> Result<Option<Self>, (u16, String)> {
+        let res = ObjResponse::get_zone(Some(&self.get_server_name()), true).await;
         res.unwrap()?;
         match res.is_empty() {
             true => {

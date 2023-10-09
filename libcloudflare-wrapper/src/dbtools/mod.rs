@@ -8,7 +8,7 @@ use libdatabase::{open_database, params, DBClient};
 pub mod read_ops;
 pub mod write_ops;
 
-pub(crate) fn db_migration(force: bool) -> Result<(), (u16, String)> {
+pub(crate) async fn db_migration(force: bool) -> Result<(), (u16, String)> {
     if let Some(_) = libdatabase::db_migration(
         DBClient::LibCloudflare,
         match force {
@@ -16,7 +16,7 @@ pub(crate) fn db_migration(force: bool) -> Result<(), (u16, String)> {
             false => None,
         },
     ) {
-        let response = ObjResponse::get_zone(None, false);
+        let response = ObjResponse::get_zone(None, false).await;
         response.unwrap()?;
 
         if !response.is_empty() {

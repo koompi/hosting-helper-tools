@@ -69,22 +69,22 @@ impl NginxObj {
         }
     }
 
-    pub fn update_target(server_name: &str, target_site: TargetSite) -> Result<(), (u16, String)> {
+    pub async fn update_target(server_name: &str, target_site: TargetSite) -> Result<(), (u16, String)> {
         let old_obj = match select_one_from_tbl_nginxconf(server_name) {
             Ok(obj) => Ok(obj),
             Err(_) => Err((400, String::from("Server Name doesn't exist"))),
         }?;
         let target_site_str = target_site.to_string();
 
-        Self::new(old_obj.server_name, target_site, old_obj.feature)?.finish()?;
+        Self::new(old_obj.server_name, target_site, old_obj.feature)?.finish().await?;
 
         update_target_tbl_nginxconf(server_name, &target_site_str);
 
         Ok(())
     }
 
-    pub fn finish(&self) -> Result<(), (u16, String)> {
-        libcloudflare_wrapper::setup_domain(&self.get_server_name())?;
+    pub async fn finish(&self) -> Result<(), (u16, String)> {
+        libcloudflare_wrapper::setup_domain(&self.get_server_name()).await?;
         let destination_file = self.write_to_disk()?;
         match self.make_ssl() {
             Ok(()) => Ok({

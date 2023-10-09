@@ -14,3 +14,4 @@ dotenv = "*"
 libnginx-wrapper = { path = "../libnginx-wrapper" }
 libcloudflare-wrapper = { path = "../libcloudflare-wrapper" }
 libdatabase = { path = "../libdatabase" }
+tokio = { version = "*", features = ["full"] }

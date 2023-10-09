@@ -4,7 +4,7 @@ use super::{Client, HeaderMap, ObjResponse};
 
 impl ObjResponse {
     pub fn get_client() -> Client {
-        reqwest::blocking::Client::builder().build().unwrap()
+        reqwest::Client::builder().build().unwrap()
     }
 
     pub fn get_headers() -> HeaderMap {

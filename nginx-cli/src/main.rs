@@ -9,13 +9,14 @@ mod update_cmd;
 
 use matcher::{match_add, match_del, match_force, match_list, match_update};
 
-fn main() {
+#[tokio::main]
+async fn main() {
     libdatabase::read_dotenv();
 
     libnginx_wrapper::init_migration(false)
         .unwrap_or_else(|err| eprintln!("Error Migration {}: {}", err.0, err.1));
     libcloudflare_wrapper::db_migration(false)
-        .unwrap_or_else(|err| eprintln!("Error Migration {}: {}", err.0, err.1));
+        .await.unwrap_or_else(|err| eprintln!("Error Migration {}: {}", err.0, err.1));
 
     let matches = Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
@@ -31,11 +32,11 @@ fn main() {
         .get_matches();
 
     match matches.subcommand() {
-        Some(("add", add_matches)) => match_add::match_add(add_matches),
+        Some(("add", add_matches)) => match_add::match_add(add_matches).await,
         Some(("delete", delete_matches)) => match_del::match_del(delete_matches),
         Some(("list", list_matches)) => match_list::match_list(list_matches),
         Some(("force", force_matches)) => match_force::match_force(force_matches),
-        Some(("update", update_matches)) => match_update::match_update(update_matches),
+        Some(("update", update_matches)) => match_update::match_update(update_matches).await,
         _ => unreachable!(),
     }
 }

@@ -1,7 +1,7 @@
 use super::ObjResponse;
 
 impl ObjResponse {
-    pub fn put_record(subdomain: &str, target: &str, zone_id: &str, record_id: &str) -> Self {
+    pub async fn put_record(subdomain: &str, target: &str, zone_id: &str, record_id: &str) -> Self {
         let client = Self::get_client();
         let headers = Self::get_headers();
         let request = client
@@ -19,8 +19,8 @@ impl ObjResponse {
                 .to_string(),
             );
 
-        let response = request.send().unwrap();
-        let body = response.text().unwrap();
+        let response = request.send().await.unwrap();
+        let body = response.text().await.unwrap();
 
         serde_json::from_str::<Self>(&body).unwrap()
     }

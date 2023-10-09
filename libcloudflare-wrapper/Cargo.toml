@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 dotenv = "*"
-reqwest = { version = "*", features = ["blocking"] }
+reqwest = "*" 
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 chrono = "*"

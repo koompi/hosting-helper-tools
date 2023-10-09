@@ -2,7 +2,7 @@ pub mod records;
 pub mod zones;
 mod objresponse_impl;
 
-use reqwest::{blocking::Client, header::HeaderMap};
+use reqwest::{Client, header::HeaderMap};
 use serde::Deserialize;
 use zones::ZoneRes;
 use records::RecordsRes;
