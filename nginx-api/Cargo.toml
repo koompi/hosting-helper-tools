@@ -8,14 +8,13 @@ edition = "2021"
 [dependencies]
 actix-cors = "*"
 actix-web = "*"
-config = "*"
-actix-jwt-auth-middleware = "*"
+actix-web-lab = "*"
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
-jwt-compact = { version = "*", features = ["ed25519-compact"] }
-ed25519-compact = "*"
 chrono = "*"
 dotenv = "*"
+lazy_static = "*"
+tokio = { version = "*", features = ["full"] }
 
 libnginx-wrapper = { path = "../libnginx-wrapper" }
-libdatabase = { path = "../libdatabase"}
+libdatabase = { path = "../libdatabase" }

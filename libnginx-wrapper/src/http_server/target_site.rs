@@ -1,7 +1,6 @@
 use super::{Deserialize, Serialize, fmt};
 
-#[derive(Deserialize, Serialize, Default)]
-// #[serde(tag = "qty", content = "data")]
+#[derive(Deserialize, Serialize, Default, Debug)]
 #[serde(untagged)]
 pub enum TargetSite {
     #[default]

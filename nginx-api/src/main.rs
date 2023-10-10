@@ -1,29 +1,12 @@
-use actix_jwt_auth_middleware::use_jwt::UseJWTOnApp;
-use actix_jwt_auth_middleware::{Authority, FromRequest, TokenSigner};
-use actix_web::{
-    middleware,
-    web::scope,
-    App, HttpServer,
-};
-use ed25519_compact::{KeyPair, Seed};
-use jwt_compact::alg::Ed25519;
+use actix_web::{middleware, App, HttpServer};
 use libnginx_wrapper::init_migration;
-use serde::{Deserialize, Serialize};
 
 mod actix_api;
 
-#[derive(Serialize, Deserialize, Clone, FromRequest)]
-struct User {
-    username: String,
-    password: String,
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-
     libdatabase::read_dotenv();
 
-    let key_pair = KeyPair::from_seed(Seed::generate());
     let hosting_addr = dotenv::var("HOSTING_ADDR").unwrap();
     let hosting_port = dotenv::var("HOSTING_PORT").unwrap();
     let hosting = format!("{hosting_addr}:{hosting_port}");
@@ -33,24 +16,6 @@ async fn main() -> std::io::Result<()> {
     let server = HttpServer::new(move || {
         let cors_allowed_addr = dotenv::var("CORS_ALLOWED_ADDR").unwrap();
         let production = dotenv::var("PRODUCTION").unwrap().parse::<bool>().unwrap();
-        let authority = Authority::<User, Ed25519, _, _>::new()
-            .refresh_authorizer(|| async move { Ok(()) })
-            .token_signer(Some(
-                TokenSigner::new()
-                    .signing_key(key_pair.sk.clone())
-                    .algorithm(Ed25519)
-                    .build()
-                    .expect(""),
-            ))
-            .enable_header_tokens(true)
-            .enable_cookie_tokens(false)
-            .enable_query_tokens(false)
-            .renew_refresh_token_automatically(true)
-            .access_token_name("access_token")
-            .refresh_token_name("refresh_token")
-            .verifying_key(key_pair.pk.clone())
-            .build()
-            .expect("");
         App::new()
             .wrap(
                 actix_cors::Cors::default()
@@ -67,17 +32,16 @@ async fn main() -> std::io::Result<()> {
                     .supports_credentials(),
             )
             .wrap(middleware::Logger::default())
-            .service(actix_api::api::login)
-            .use_jwt(
-                authority,
-                scope("")
-                    .service(actix_api::api::get_nginx_list)
-                    .service(actix_api::api::post_add_nginx)
-                    .service(actix_api::api::post_force_cert)
-                    .service(actix_api::api::post_force_migration)
-                    .service(actix_api::api::delete_remove_nginx)
-                    .service(actix_api::api::put_update_target_site),
-            )
+            .wrap(actix_web_lab::middleware::from_fn(
+                actix_api::middleware::simple_auth,
+            ))
+            .service(actix_api::api::get_nginx_list)
+            .service(actix_api::api::post_add_nginx)
+            .service(actix_api::api::post_force_cert)
+            .service(actix_api::api::post_force_migration)
+            .service(actix_api::api::delete_remove_nginx)
+            .service(actix_api::api::put_update_target_site)
+        // )
     })
     .bind(&hosting)?;
     println!("Server Running at {hosting}");

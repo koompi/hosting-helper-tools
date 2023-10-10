@@ -1,6 +1,6 @@
 use super::{fmt, Deserialize, Serialize, FromStr};
 
-#[derive(Deserialize, Serialize, Default)]
+#[derive(Deserialize, Serialize, Default, Debug)]
 pub enum NginxFeatures {
     Redirect,
     Proxy,

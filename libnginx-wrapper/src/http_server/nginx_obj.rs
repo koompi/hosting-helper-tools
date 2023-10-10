@@ -15,7 +15,7 @@ use super::{
     Command, Deserialize, Serialize,
 };
 
-#[derive(Deserialize, Serialize, Default)]
+#[derive(Deserialize, Serialize, Default, Debug)]
 pub struct NginxObj {
     server_name: String,
     target_site: TargetSite,
