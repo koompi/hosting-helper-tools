@@ -11,53 +11,16 @@
   sudo ./nginx-api
   ```
 
-## Public API
-
-<details close="close">
-<summary><b>POST</b> /login</summary>
-
----
-
-| Header | Data Type |
-| ------ | --------- |
-| None   | None      |
-
-Body
-
-```json
-{
-  "username": "isaac",
-  "password": "123"
-}
-```
-
-Response 200
-
-```json
-{
-  "access_token": "eyJhbGciOiJFZERTQSJ9.eyJleHAiOjE2ODY5ODE5MTMsImlhdCI6MTY4Njk3ODMxMywidXNlcm5hbWUiOiJpc2FhYyIsInBhc3N3b3JkIjoiMTIzIn0.7wPA1dVRrBnRso4ut1R_N1Y_l66To8Z4s5nXLnZDfv8rKcITFP2hrjmhHw7v3XcareYFYHmifNo1McWDaKmMBQ",
-  "refresh_token": "eyJhbGciOiJFZERTQSJ9.eyJleHAiOjE2ODcwNjQ3MTMsImlhdCI6MTY4Njk3ODMxMywidXNlcm5hbWUiOiJpc2FhYyIsInBhc3N3b3JkIjoiMTIzIn0.WLQyjUQrnrh573eRgzh67YRjtblQrJsJ4EDOYouvA4N7WAr_ZCJFBPGtivhrjmd6zE4OA3ZUCw28r3zml2MmCw"
-}
-```
-
-| Error | Body                   |
-| ----- | ---------------------- |
-| 400   | actual_error_goes_here |
-| 401   | Unautorised            |
-| 500   | actual_error_goes_here |
-
----
-
 </details>
 
 ## Protected API
 
 All protected API endpoint needs:
 
-| Header        | Data Type |
-| ------------- | --------- |
-| access_token  | String    |
-| refresh_token | String    |
+| Header      | Data Type |
+| ----------- | --------- |
+| X-Auth-User | String    |
+| X-Auth-Pass | String    |
 
 <details close="close">
 <summary><b>GET</b> /nginx/list</summary>
@@ -77,18 +40,21 @@ Body
 Response 200
 
 ```json
-[
-  {
-    "server_name": "tellsela.com",
-    "target_site": "http://koompi.com",
-    "feature": "Proxy"
-  },
-  {
-    "server_name": "selatell.com",
-    "target_site": "http://koompi.com",
-    "feature": "Redirect"
-  }
-]
+{
+  "code": 200,
+  "message": [
+    {
+      "server_name": "tellsela.com",
+      "target_site": "http://koompi.com",
+      "feature": "Proxy"
+    },
+    {
+      "server_name": "selatell.com",
+      "target_site": "http://koompi.com",
+      "feature": "Redirect"
+    }
+  ]
+}
 ```
 
 | Error | Body                   |
@@ -127,10 +93,10 @@ Use either appropriately
 {
   "server_name": "forwarder.koompi.com",
   "target_site": [
-      "http://localhost:8080",
-      "http://localhost:8090",
-      "http://localhost:8070"
-    ],
+    "http://localhost:8080",
+    "http://localhost:8090",
+    "http://localhost:8070"
+  ],
   "feature": "Proxy"
 }
 ```
@@ -146,7 +112,10 @@ Use either appropriately
 Response 200
 
 ```json
-
+{
+  "code": 200,
+  "message": "Ok"
+}
 ```
 
 | Error | Body                   |
@@ -188,7 +157,10 @@ Body
 Response 200
 
 ```json
-
+{
+  "code": 200,
+  "message": "Ok"
+}
 ```
 
 | Error | Body                   |
@@ -221,7 +193,10 @@ Body
 Response 200
 
 ```json
-
+{
+  "code": 200,
+  "message": "Ok"
+}
 ```
 
 | Error | Body                   |
@@ -266,7 +241,10 @@ Body
 Response 200
 
 ```json
-
+{
+  "code": 200,
+  "message": "Ok"
+}
 ```
 
 | Error | Body                   |
@@ -300,7 +278,10 @@ Body
 Response 200
 
 ```json
-
+{
+  "code": 200,
+  "message": "Ok"
+}
 ```
 
 | Error | Body                   |
