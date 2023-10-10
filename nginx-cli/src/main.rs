@@ -12,11 +12,16 @@ use matcher::{match_add, match_del, match_force, match_list, match_update};
 #[tokio::main]
 async fn main() {
     libdatabase::read_dotenv();
-
-    libnginx_wrapper::init_migration(false)
-        .unwrap_or_else(|err| eprintln!("Error Migration {}: {}", err.0, err.1));
-    libcloudflare_wrapper::db_migration(false)
-        .await.unwrap_or_else(|err| eprintln!("Error Migration {}: {}", err.0, err.1));
+    
+    let migrated_sign = ".migrated";
+    if !std::path::Path::new(migrated_sign).exists() {
+        libnginx_wrapper::init_migration(false)
+            .unwrap_or_else(|err| eprintln!("Error Nginx Migration {}: {}", err.0, err.1));
+        libcloudflare_wrapper::db_migration(false)
+            .await
+            .unwrap_or_else(|err| eprintln!("Error Cloudflare Migration {}: {}", err.0, err.1));
+        std::fs::File::create(migrated_sign).unwrap();
+    }
 
     let matches = Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
