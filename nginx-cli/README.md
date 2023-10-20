@@ -2,6 +2,8 @@
 
 NGINX HELPER TOOLS is CLI tools to use libnginx-wrapper to create safe and easy nginx configuration with SSL HTTPS; NGINX HELP TOOLS needs sudo;
 
+![HOW TO USE NGINX CLI](images/how-to-use-nginx-cli.png)
+
 ```
 Nginx Helper Tools
 
