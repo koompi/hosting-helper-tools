@@ -69,22 +69,51 @@ impl NginxObj {
         }
     }
 
-    pub async fn update_target(server_name: &str, target_site: TargetSite) -> Result<(), (u16, String)> {
+    pub async fn update_target(
+        server_name: &str,
+        target_site: TargetSite,
+    ) -> Result<(), (u16, String)> {
         let old_obj = match select_one_from_tbl_nginxconf(server_name) {
             Ok(obj) => Ok(obj),
             Err(_) => Err((400, String::from("Server Name doesn't exist"))),
         }?;
         let target_site_str = target_site.to_string();
 
-        Self::new(old_obj.server_name, target_site, old_obj.feature)?.finish().await?;
+        Self::new(old_obj.server_name, target_site, old_obj.feature)?
+            .finish()
+            .await?;
 
         update_target_tbl_nginxconf(server_name, &target_site_str);
 
         Ok(())
     }
 
+    pub async fn setup_cloudflare(&self, switch: bool) -> Result<(), (u16, String)> {
+        let client = libcloudflare_wrapper::get_client();
+        match switch {
+            true => libcloudflare_wrapper::setup_domain(&self.get_server_name()).await,
+            false => {
+                let our_ip = libcloudflare_wrapper::get_public_ip(&client, None).await;
+                let domain_ip =
+                    libcloudflare_wrapper::get_public_ip(&client, Some(&self.get_server_name())).await;
+                match our_ip != domain_ip {
+                    true => Err((
+                        500,
+                        format!(
+                            "The Public IP {} of the Domain {} does not match Server Public IP {}",
+                            domain_ip,
+                            &self.get_server_name(),
+                            our_ip
+                        ),
+                    )),
+                    false => Ok(()),
+                }
+            }
+        }
+    }
+
     pub async fn finish(&self) -> Result<(), (u16, String)> {
-        libcloudflare_wrapper::setup_domain(&self.get_server_name()).await?;
+        // libcloudflare_wrapper::setup_domain(&self.get_server_name()).await?;
         let destination_file = self.write_to_disk()?;
         match self.make_ssl() {
             Ok(()) => Ok({

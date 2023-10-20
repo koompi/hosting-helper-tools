@@ -1,11 +1,7 @@
-use super::{
-    super::init_migration,
-    obj_response::ActixCustomResponse,
-    HttpResponse,
-};
+use super::{super::init_migration, obj_response::ActixCustomResponse, HttpResponse};
 use actix_web::{
     delete, get, post, put,
-    web::Json,
+    web::{Json, Query},
     Error, HttpRequest,
 };
 use libnginx_wrapper::{
@@ -13,13 +9,29 @@ use libnginx_wrapper::{
     http_server::{nginx_obj::NginxObj, remake_ssl, remove_nginx_conf, target_site::TargetSite},
 };
 
+#[derive(Debug, serde::Deserialize)]
+pub struct AddNginxQueryString {
+    cloudflare: bool,
+}
+impl AddNginxQueryString {
+    fn get_cloudflare_bool(&self) -> &bool {
+        &self.cloudflare
+    }
+}
+
 #[get("/nginx/list")]
 pub async fn get_nginx_list() -> Result<HttpResponse, Error> {
-    Ok(HttpResponse::Ok().json(ActixCustomResponse::new_vec_obj(200, select_all_from_tbl_nginxconf())))
+    Ok(HttpResponse::Ok().json(ActixCustomResponse::new_vec_obj(
+        200,
+        select_all_from_tbl_nginxconf(),
+    )))
 }
 
 #[post("/nginx/add")]
-pub async fn post_add_nginx(args: Json<NginxObj>) -> Result<HttpResponse, ActixCustomResponse> {
+pub async fn post_add_nginx(
+    args: Json<NginxObj>,
+    qstring: Option<Query<AddNginxQueryString>>,
+) -> Result<HttpResponse, ActixCustomResponse> {
     let args = args.into_inner();
 
     match args.verify() {
@@ -27,6 +39,16 @@ pub async fn post_add_nginx(args: Json<NginxObj>) -> Result<HttpResponse, ActixC
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;
 
+    match args
+        .setup_cloudflare(match qstring {
+            Some(opt) => *opt.get_cloudflare_bool(),
+            None => true,
+        })
+        .await
+    {
+        Ok(()) => Ok(()),
+        Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
+    }?;
 
     match args.finish().await {
         Ok(()) => Ok(()),

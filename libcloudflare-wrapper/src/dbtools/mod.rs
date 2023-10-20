@@ -16,7 +16,13 @@ pub(crate) async fn db_migration(force: bool) -> Result<(), (u16, String)> {
             false => None,
         },
     ) {
-        let response = ObjResponse::get_zone(None, false).await;
+        let response = ObjResponse::get_zone(
+            &ObjResponse::get_client(),
+            &ObjResponse::get_headers(),
+            None,
+            false,
+        )
+        .await;
         response.unwrap()?;
 
         if !response.is_empty() {

@@ -5,7 +5,7 @@ pub struct ObjMeta {
     pub auto_added: bool,
     pub managed_by_argo_tunnel: bool,
     pub managed_by_apps: bool,
-    pub source: String,
+    pub source: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Default)]

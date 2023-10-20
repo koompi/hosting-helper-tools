@@ -67,7 +67,10 @@ impl CloudflarePending {
     }
 
     pub fn format_dns_vec(dns: &Vec<String>) -> String {
-        dns.iter().map(|each| format!("\tNameserver: {}", each)).collect::<Vec<String>>().join("\n")
+        dns.iter()
+            .map(|each| format!("\tNameserver: {}", each))
+            .collect::<Vec<String>>()
+            .join("\n")
     }
 
     pub fn is_expired(&self) -> bool {
@@ -78,8 +81,12 @@ impl CloudflarePending {
         duration.num_minutes() >= dotenv::var("PENDING_CHECK_LIMIT").unwrap().parse().unwrap()
     }
 
-    pub async fn recheck_pending_status(&self) -> Result<Option<Self>, (u16, String)> {
-        let res = ObjResponse::get_zone(Some(&self.get_server_name()), true).await;
+    pub async fn recheck_pending_status(
+        &self,
+        client: &reqwest::Client,
+        headers: &reqwest::header::HeaderMap,
+    ) -> Result<Option<Self>, (u16, String)> {
+        let res = ObjResponse::get_zone(client, headers, Some(&self.get_server_name()), true).await;
         res.unwrap()?;
         match res.is_empty() {
             true => {
@@ -89,7 +96,7 @@ impl CloudflarePending {
             false => {
                 let data = match res.result.unwrap() {
                     ObjResult::ZonesData(data) => data.into_iter().next().unwrap(),
-                    _ => unreachable!()
+                    _ => unreachable!(),
                 };
                 let newdns = serde_json::json!(data.name_servers).to_string();
                 let olddns = match data.original_name_servers {

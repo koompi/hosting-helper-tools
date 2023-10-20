@@ -4,7 +4,7 @@ use super::{Client, HeaderMap, ObjResponse};
 
 impl ObjResponse {
     pub fn get_client() -> Client {
-        reqwest::Client::builder().build().unwrap()
+        reqwest::Client::builder().local_address("0.0.0.0".parse::<std::net::IpAddr>().unwrap()).build().unwrap()
     }
 
     pub fn get_headers() -> HeaderMap {
@@ -18,14 +18,4 @@ impl ObjResponse {
         );
         headers
     }
-
-    // pub fn default() -> Self {
-    //     Self {
-    //         errors: ObjErr,
-    //         messages: todo!(),
-    //         success: todo!(),
-    //         result_info: todo!(),
-    //         result: todo!(),
-    //     }
-    // }
 }

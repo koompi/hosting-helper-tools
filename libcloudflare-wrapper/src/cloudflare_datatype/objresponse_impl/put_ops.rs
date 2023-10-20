@@ -1,9 +1,14 @@
-use super::ObjResponse;
+use super::{Client, HeaderMap, ObjResponse};
 
 impl ObjResponse {
-    pub async fn put_record(subdomain: &str, target: &str, zone_id: &str, record_id: &str) -> Self {
-        let client = Self::get_client();
-        let headers = Self::get_headers();
+    pub async fn put_record(
+        client: &Client,
+        headers: &HeaderMap,
+        subdomain: &str,
+        target: &str,
+        zone_id: &str,
+        record_id: &str,
+    ) -> Self {
         let request = client
             .put(format!(
                 "https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records/{record_id}"

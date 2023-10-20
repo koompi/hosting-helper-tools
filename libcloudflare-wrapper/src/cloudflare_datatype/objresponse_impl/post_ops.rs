@@ -1,9 +1,7 @@
-use super::ObjResponse;
+use super::{Client, HeaderMap, ObjResponse};
 
 impl ObjResponse {
-    pub async fn post_zone(domain_name: &str) -> Self {
-        let client = Self::get_client();
-        let headers = Self::get_headers();
+    pub async fn post_zone(client: &Client, headers: &HeaderMap, domain_name: &str) -> Self {
         let request = client
             .post("https://api.cloudflare.com/client/v4/zones")
             .headers(headers.clone())
@@ -24,9 +22,13 @@ impl ObjResponse {
         serde_json::from_str::<Self>(&body).unwrap()
     }
 
-    pub async fn post_record(subdomain: &str, target: &str, zone_id: &str) -> Self {
-        let client = Self::get_client();
-        let headers = Self::get_headers();
+    pub async fn post_record(
+        client: &Client,
+        headers: &HeaderMap,
+        subdomain: &str,
+        target: &str,
+        zone_id: &str,
+    ) -> Self {
         let request = client
             .post(format!(
                 "https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records"
