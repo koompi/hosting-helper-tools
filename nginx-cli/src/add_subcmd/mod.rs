@@ -3,6 +3,7 @@ mod redir_arg;
 mod filehost_arg;
 mod spa_arg;
 mod dname_target_arg;
+mod cloudflare_arg;
 
 use super::{Arg, ArgAction, Command};
 
@@ -16,4 +17,5 @@ pub(crate) fn add_subcmd() -> Command {
         .arg(filehost_arg::filehost_arg())
         .arg(spa_arg::spa_arg())
         .args(dname_target_arg::dname_target_arg())
+        .arg(cloudflare_arg::cloudflare_arg())
 }
