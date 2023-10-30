@@ -17,6 +17,8 @@ pub struct AddNginxQueryString {
     ssl: bool,
     #[serde(default = "def_bool::<true>")]
     enom: bool,
+    #[serde(default = "def_bool::<true>")]
+    ipcheck: bool,
 }
 impl AddNginxQueryString {
     fn get_cloudflare_bool(&self) -> &bool {
@@ -27,6 +29,9 @@ impl AddNginxQueryString {
     }
     fn get_enom_bool(&self) -> &bool {
         &self.enom
+    }
+    fn get_ipcheck_bool(&self) -> &bool {
+        &self.ipcheck
     }
 }
 const fn def_bool<const V: bool>() -> bool {
@@ -55,7 +60,7 @@ pub async fn post_add_nginx(
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;
 
-    match args.setup_cloudflare(*qstring.get_cloudflare_bool()).await {
+    match args.setup_cloudflare(*qstring.get_cloudflare_bool(), *qstring.get_ipcheck_bool()).await {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;

@@ -88,28 +88,33 @@ impl NginxObj {
         Ok(())
     }
 
-    pub async fn setup_cloudflare(&self, switch: bool) -> Result<(), (u16, String)> {
+    pub async fn setup_cloudflare(
+        &self,
+        switch: bool,
+        ip_check: bool,
+    ) -> Result<(), (u16, String)> {
         let client = libcloudflare_wrapper::get_client();
-        match switch {
-            true => libcloudflare_wrapper::setup_domain(&self.get_server_name()).await,
-            false => {
-                let our_ip = libcloudflare_wrapper::get_public_ip(&client, None).await;
-                let domain_ip =
-                    libcloudflare_wrapper::get_public_ip(&client, Some(&self.get_server_name()))
-                        .await;
-                match our_ip != domain_ip {
-                    true => Err((
-                        500,
-                        format!(
-                            "The Public IP {} of the Domain {} does not match Server Public IP {}",
-                            domain_ip,
-                            &self.get_server_name(),
-                            our_ip
-                        ),
-                    )),
-                    false => Ok(()),
-                }
+
+        if switch {
+            libcloudflare_wrapper::setup_domain(&self.get_server_name()).await
+        } else if ip_check {
+            let our_ip = libcloudflare_wrapper::get_public_ip(&client, None).await;
+            let domain_ip =
+                libcloudflare_wrapper::get_public_ip(&client, Some(&self.get_server_name())).await;
+            match our_ip != domain_ip {
+                true => Err((
+                    500,
+                    format!(
+                        "The Public IP {} of the Domain {} does not match Server Public IP {}",
+                        domain_ip,
+                        &self.get_server_name(),
+                        our_ip
+                    ),
+                )),
+                false => Ok(()),
             }
+        } else {
+            Ok(())
         }
     }
 

@@ -9,6 +9,7 @@ enum NegatableFeature {
     Enom,
     Cloudflare,
     SSL,
+    IpCheck
 }
 impl FromStr for NegatableFeature {
     type Err = String;
@@ -18,6 +19,7 @@ impl FromStr for NegatableFeature {
             "Enom" | "enom" | "ENOM" => Ok(NegatableFeature::Enom),
             "Cloudflare" | "cloudflare" | "CLOUDFLARE" => Ok(NegatableFeature::Cloudflare),
             "SSL" | "ssl" | "Ssl" => Ok(NegatableFeature::SSL),
+            "IpCheck" | "ipcheck" | "IPCHECK" | "IPCheck" | "IPcheck" => Ok(NegatableFeature::IpCheck),
             _ => Err(format!("{} is not available", s)),
         }
     }
@@ -67,6 +69,9 @@ pub(crate) async fn match_add(matches: &ArgMatches) {
     let _enom = !negatefeature
         .iter()
         .any(|each| each == &NegatableFeature::Enom);
+    let ip_check = !negatefeature
+        .iter()
+        .any(|each| each == &NegatableFeature::IpCheck);
 
     match NginxObj::new(
         domain_name,
@@ -77,7 +82,7 @@ pub(crate) async fn match_add(matches: &ArgMatches) {
         feature,
     ) {
         Ok(data_obj) => {
-            match data_obj.setup_cloudflare(cloudflare).await {
+            match data_obj.setup_cloudflare(cloudflare, ip_check).await {
                 Ok(()) => match data_obj.finish(ssl).await {
                     Ok(()) => println!("Successfully added {}", data_obj.get_server_name()),
                     Err((code, message)) => eprintln!("Error {code}: {message}"),
