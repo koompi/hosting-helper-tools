@@ -168,7 +168,7 @@ fn extract_nginx_filehost_and_spa(config: String, feature: NginxFeatures) -> Ngi
     }
 }
 
-fn read_file(source_file: &str) -> String {
+pub(crate) fn read_file(source_file: &str) -> String {
     match OpenOptions::new().read(true).open(source_file) {
         Ok(file_read) => {
             let mut read_buffer = BufReader::new(&file_read);

@@ -11,14 +11,31 @@ pub fn remove_nginx_conf(server_name: &str) -> Result<(), (u16, String)> {
     let proxy_sites_path = dotenv::var("PROXY_SITES_PATH").unwrap();
     let spa_sites_path = dotenv::var("SPA_SITES_PATH").unwrap();
     let file_sites_path = dotenv::var("FILE_SITES_PATH").unwrap();
+    let current_file_path = format!(
+        "{}/{}.conf",
+        match dbtools::crud::select_one_from_tbl_nginxconf(server_name)
+            .unwrap()
+            .get_feature()
+        {
+            nginx_features::NginxFeatures::Redirect => redirect_sites_path,
+            nginx_features::NginxFeatures::Proxy => proxy_sites_path,
+            nginx_features::NginxFeatures::SPA => spa_sites_path,
+            nginx_features::NginxFeatures::FileHost => file_sites_path,
+            nginx_features::NginxFeatures::None => unreachable!(),
+        },
+        server_name
+    );
 
     match dbtools::crud::query_existence_from_tbl_nginxconf(server_name) {
         true => Ok(()),
         false => Err((400, String::from("Item doesn't exist"))),
     }?;
 
-
     loop {
+        if !fstools::read_ops::read_file(&current_file_path).contains("ssl_certificate") {
+            break Ok(())?;
+        }
+
         let certbot_res = Command::new("certbot")
             .arg("delete")
             .arg("-n")
@@ -45,36 +62,22 @@ pub fn remove_nginx_conf(server_name: &str) -> Result<(), (u16, String)> {
         }?;
     }
 
-    let fserror = match dbtools::crud::select_one_from_tbl_nginxconf(server_name)
-        .unwrap()
-        .get_feature()
-    {
-        nginx_features::NginxFeatures::Proxy => {
-            std::fs::remove_file(format!("{}/{}.conf", proxy_sites_path, server_name))
-        }
-        nginx_features::NginxFeatures::Redirect => {
-            std::fs::remove_file(format!("{}/{}.conf", redirect_sites_path, server_name))
-        }
-        nginx_features::NginxFeatures::SPA => {
-            std::fs::remove_file(format!("{}/{}.conf", spa_sites_path, server_name))
-        }
-        nginx_features::NginxFeatures::FileHost => {
-            std::fs::remove_file(format!("{}/{}.conf", file_sites_path, server_name))
-        }
-        nginx_features::NginxFeatures::None => Ok(()),
-    };
+    let fserror = std::fs::remove_file(current_file_path);
 
     dbtools::crud::delete_from_tbl_nginxconf(server_name);
 
     match fserror {
         Ok(()) => Ok(()),
-        Err(err) => match err.to_string().contains("No such file or directory (os error 2)") {
+        Err(err) => match err
+            .to_string()
+            .contains("No such file or directory (os error 2)")
+        {
             true => {
                 dbtools::db_migration(true);
                 Ok(())
-            },
-            false => Err((500, err.to_string()))
-        }
+            }
+            false => Err((500, err.to_string())),
+        },
     }?;
 
     restart_reload_service();

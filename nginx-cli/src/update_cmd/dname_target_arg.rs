@@ -15,6 +15,7 @@ pub(crate) fn dname_target_arg() -> [Arg; 2] {
             .required(true)
             .action(ArgAction::Set)
             .num_args(1..)
+            .value_delimiter(',')
             .help("Domain name to ReverseProxy/Redirect/SPA/FileHost to; eg: http://localhost:8080 or https://koompi.app or /kmp/filehost-spa"),
     ]
 }

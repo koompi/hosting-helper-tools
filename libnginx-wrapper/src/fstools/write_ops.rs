@@ -21,7 +21,7 @@ pub(crate) fn write_file(
 
     let open_file = match open_file {
         Ok(open_file) => Ok(open_file),
-        Err(err) => Err((500, err.to_string())),
+        Err(err) => Err((500, err.to_string() + "\nPlease use SUDO")),
     }?;
 
     BufWriter::new(open_file)

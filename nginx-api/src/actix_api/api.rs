@@ -11,12 +11,26 @@ use libnginx_wrapper::{
 
 #[derive(Debug, serde::Deserialize)]
 pub struct AddNginxQueryString {
+    #[serde(default = "def_bool::<true>")]
     cloudflare: bool,
+    #[serde(default = "def_bool::<true>")]
+    ssl: bool,
+    #[serde(default = "def_bool::<true>")]
+    enom: bool,
 }
 impl AddNginxQueryString {
     fn get_cloudflare_bool(&self) -> &bool {
         &self.cloudflare
     }
+    fn get_ssl_bool(&self) -> &bool {
+        &self.ssl
+    }
+    fn get_enom_bool(&self) -> &bool {
+        &self.enom
+    }
+}
+const fn def_bool<const V: bool>() -> bool {
+    V
 }
 
 #[get("/nginx/list")]
@@ -30,27 +44,23 @@ pub async fn get_nginx_list() -> Result<HttpResponse, Error> {
 #[post("/nginx/add")]
 pub async fn post_add_nginx(
     args: Json<NginxObj>,
-    qstring: Option<Query<AddNginxQueryString>>,
+    qstring: Query<AddNginxQueryString>,
 ) -> Result<HttpResponse, ActixCustomResponse> {
     let args = args.into_inner();
+
+    println!("Enom: {} is illegally called", qstring.get_enom_bool());
 
     match args.verify() {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;
 
-    match args
-        .setup_cloudflare(match qstring {
-            Some(opt) => *opt.get_cloudflare_bool(),
-            None => true,
-        })
-        .await
-    {
+    match args.setup_cloudflare(*qstring.get_cloudflare_bool()).await {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;
 
-    match args.finish().await {
+    match args.finish(*qstring.get_ssl_bool()).await {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;

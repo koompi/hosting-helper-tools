@@ -107,6 +107,14 @@ Use either appropriately
 | target_site | String: eg. https://weteka.org/user/rithy or String Array: ["http://localhost:3030", "http://localhost:2345"] |
 | feature     | String: `Proxy` _or_ `Redirect` _or_ `FileHost` _or_ `SPA`                                                    |
 
+| Query Paramter | Data Type                                                                   |
+| -------------- | --------------------------------------------------------------------------- |
+| enom           | _true_ or _false_ for setting to configure enom or not: **default to true** |
+| ssl            | _true_ or _false_ for setting to configure ssl or not: **default to true**  |
+| cloudflare     | _true_ or _false_ for setting to configure cloudflare: **default to true**  |
+
+Link Example: `http://localhost:8080/nginx/add?enom=false&cloudflare=true&ssl=true`
+
 Response 200
 
 ```json

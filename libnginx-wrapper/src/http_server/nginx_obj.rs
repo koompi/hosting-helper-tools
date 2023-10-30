@@ -80,7 +80,7 @@ impl NginxObj {
         let target_site_str = target_site.to_string();
 
         Self::new(old_obj.server_name, target_site, old_obj.feature)?
-            .finish()
+            .finish(false)
             .await?;
 
         update_target_tbl_nginxconf(server_name, &target_site_str);
@@ -95,7 +95,8 @@ impl NginxObj {
             false => {
                 let our_ip = libcloudflare_wrapper::get_public_ip(&client, None).await;
                 let domain_ip =
-                    libcloudflare_wrapper::get_public_ip(&client, Some(&self.get_server_name())).await;
+                    libcloudflare_wrapper::get_public_ip(&client, Some(&self.get_server_name()))
+                        .await;
                 match our_ip != domain_ip {
                     true => Err((
                         500,
@@ -112,24 +113,27 @@ impl NginxObj {
         }
     }
 
-    pub async fn finish(&self) -> Result<(), (u16, String)> {
-        // libcloudflare_wrapper::setup_domain(&self.get_server_name()).await?;
+    pub async fn finish(&self, ssl: bool) -> Result<(), (u16, String)> {
         let destination_file = self.write_to_disk()?;
-        match self.make_ssl() {
-            Ok(()) => Ok({
-                restart_reload_service();
-                insert_tbl_nginxconf(
-                    self.server_name.as_ref(),
-                    self.target_site.to_string().as_ref(),
-                    self.feature.to_string().as_ref(),
-                );
-            }),
-            Err(err) => Err({
-                std::fs::remove_file(destination_file).unwrap();
-                err
-            }),
-        }?;
-        Ok(())
+
+        if ssl {
+            match self.make_ssl() {
+                Ok(()) => Ok(()),
+                Err(err) => Err({
+                    std::fs::remove_file(&destination_file).unwrap();
+                    err
+                }),
+            }?;
+        }
+
+        Ok({
+            restart_reload_service();
+            insert_tbl_nginxconf(
+                self.server_name.as_ref(),
+                self.target_site.to_string().as_ref(),
+                self.feature.to_string().as_ref(),
+            );
+        })
     }
 
     pub fn verify(&self) -> Result<(), (u16, String)> {
