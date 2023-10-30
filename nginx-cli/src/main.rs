@@ -12,9 +12,17 @@ use matcher::{match_add, match_del, match_force, match_list, match_update};
 #[tokio::main]
 async fn main() {
     libdatabase::read_dotenv();
-    
-    let migrated_sign = ".migrated";
-    if !std::path::Path::new(migrated_sign).exists() {
+
+    let migrated_sign = format!(
+        "{}/.migrated",
+        std::env::current_exe()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_str()
+            .unwrap()
+    );
+    if !std::path::Path::new(&migrated_sign).exists() {
         libnginx_wrapper::init_migration(false)
             .unwrap_or_else(|err| eprintln!("Error Nginx Migration {}: {}", err.0, err.1));
         libcloudflare_wrapper::db_migration(false)
