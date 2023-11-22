@@ -13,7 +13,7 @@ pub fn remove_nginx_conf(server_name: &str) -> Result<(), (u16, String)> {
     let file_sites_path = dotenv::var("FILE_SITES_PATH").unwrap();
     let current_file_path = format!(
         "{}/{}.conf",
-        match dbtools::crud::select_one_from_tbl_nginxconf(server_name)
+        match dbtools::crud::select_one_from_tbl_nginxconf(server_name, None)
             .unwrap()
             .get_feature()
         {

@@ -1,4 +1,4 @@
-pub use rusqlite::{params, Connection, Error};
+pub use rusqlite::{params, Connection, Error, Row};
 
 pub enum DBClient {
     LibCloudflare,

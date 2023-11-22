@@ -19,7 +19,7 @@ pub(crate) fn match_list(matches: &ArgMatches) {
             .get_one::<String>("domain_name")
             .expect("contains_id")
             .to_owned();
-        vec![select_one_from_tbl_nginxconf(&domain_name).unwrap_or_default()]
+        vec![select_one_from_tbl_nginxconf(&domain_name, None).unwrap_or_default()]
     } else {
         select_all_from_tbl_nginxconf()
     };

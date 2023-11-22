@@ -35,6 +35,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(actix_web_lab::middleware::from_fn(
                 actix_api::middleware::simple_auth,
             ))
+            .service(actix_api::api::get_dns)
             .service(actix_api::api::get_nginx_list)
             .service(actix_api::api::post_add_nginx)
             .service(actix_api::api::post_force_cert)

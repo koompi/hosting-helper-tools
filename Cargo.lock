@@ -1255,6 +1255,7 @@ dependencies = [
  "chrono",
  "dotenv",
  "lazy_static",
+ "libcloudflare-wrapper",
  "libdatabase",
  "libnginx-wrapper",
  "serde",

@@ -6,7 +6,9 @@ use serde::Serialize;
 #[serde(untagged)]
 pub enum BodyMessage {
     Text(String),
-    HostingObj(Vec<NginxObj>)
+    DnsObj(CustomDnsStruct),
+    NginxObj(NginxObj),
+    HostingObj(Vec<NginxObj>),
 }
 
 #[derive(Serialize, Debug)]
@@ -16,13 +18,30 @@ pub struct ActixCustomResponse {
 }
 
 impl ActixCustomResponse {
-    pub fn new_text(code:u16, message: String) -> Self {
-        Self { code, message: BodyMessage::Text(message) }
+    pub fn new_text(code: u16, message: String) -> Self {
+        Self {
+            code,
+            message: BodyMessage::Text(message),
+        }
     }
-    pub fn new_vec_obj(code:u16, message: Vec<NginxObj>) -> Self {
-        Self { code, message: BodyMessage::HostingObj(message) }
+    pub fn new_vec_obj(code: u16, message: Vec<NginxObj>) -> Self {
+        Self {
+            code,
+            message: BodyMessage::HostingObj(message),
+        }
     }
-
+    pub fn new_nginx_obj(code: u16, message: NginxObj) -> Self {
+        Self {
+            code,
+            message: BodyMessage::NginxObj(message),
+        }
+    }
+    pub fn new_dns_obj(code: u16, message: CustomDnsStruct) -> Self {
+        Self {
+            code,
+            message: BodyMessage::DnsObj(message),
+        }
+    }
 }
 
 impl std::fmt::Display for ActixCustomResponse {
@@ -37,5 +56,25 @@ impl ResponseError for ActixCustomResponse {
     }
     fn status_code(&self) -> actix_web::http::StatusCode {
         actix_web::http::StatusCode::from_u16(self.code).unwrap()
+    }
+}
+
+#[derive(Serialize, Debug)]
+pub struct CustomDnsStruct {
+    name: String,
+    r#type: String,
+    content: String,
+    proxy: bool,
+    ttl: String,
+}
+impl CustomDnsStruct {
+    pub fn new(name: String, r#type: String, content: String, proxy: bool, ttl: String) -> Self {
+        Self {
+            name,
+            r#type,
+            content,
+            proxy,
+            ttl,
+        }
     }
 }

@@ -73,7 +73,7 @@ impl NginxObj {
         server_name: &str,
         target_site: TargetSite,
     ) -> Result<(), (u16, String)> {
-        let old_obj = match select_one_from_tbl_nginxconf(server_name) {
+        let old_obj = match select_one_from_tbl_nginxconf(server_name, None) {
             Ok(obj) => Ok(obj),
             Err(_) => Err((400, String::from("Server Name doesn't exist"))),
         }?;
