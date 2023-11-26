@@ -9,6 +9,7 @@ edition = "2021"
 actix-cors = "*"
 actix-web = "*"
 actix-web-lab = "*"
+actix-multipart = "*"
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 chrono = "*"
@@ -19,3 +20,4 @@ tokio = { version = "*", features = ["full"] }
 libnginx-wrapper = { path = "../libnginx-wrapper" }
 libdatabase = { path = "../libdatabase" }
 libcloudflare-wrapper ={ path = "../libcloudflare-wrapper" }
+libdeploy-wrapper = { path = "../libdeploy-wrapper" }

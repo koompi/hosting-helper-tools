@@ -1,8 +1,9 @@
-pub use rusqlite::{params, Connection, Error, Row};
+pub use rusqlite::{params, Connection, Error, Row, Statement, ToSql};
 
 pub enum DBClient {
     LibCloudflare,
     LibNginx,
+    LibDeploy,
 }
 
 pub fn open_database() -> Connection {
@@ -31,7 +32,8 @@ pub fn read_dotenv() {
             .unwrap()
             .to_str()
             .unwrap()
-    )).unwrap()
+    ))
+    .unwrap()
 }
 
 pub(crate) fn create_tables(db: Option<DBClient>) {
@@ -51,7 +53,15 @@ pub(crate) fn create_tables(db: Option<DBClient>) {
                 ServerName VARCHAR(100) NOT NULL UNIQUE PRIMARY KEY,
                 ZoneID VARCHAR(100) NOT NULL UNIQUE
             );"
-                }
+                },
+                DBClient::LibDeploy => {
+                    "CREATE TABLE tblDeployData (
+                ProcessId INTEGER CHECK(ProcessId >= 0 AND ProcessId <= 4294967295) NOT NULL UNIQUE,
+                PortNumber INTEGER  CHECK(PortNumber > 1023  AND PortNumber < 65535) NOT NULL UNIQUE,
+                ThemePath TEXT NOT NULL UNIQUE,
+                ServerName VARCHAR(100) NOT NULL UNIQUE
+            );"
+                },
                 DBClient::LibNginx => {
                     "CREATE TABLE tblNginxConf(
                 ServerName VARCHAR(100) NOT NULL UNIQUE PRIMARY KEY,
@@ -93,6 +103,7 @@ pub fn db_migration(db: DBClient, force: Option<DBClient>) -> Option<u8> {
                     "BEGIN; DROP TABLE tblCloudflarePending; DROP TABLE tblCloudflareData; COMMIT;"
                 }
                 DBClient::LibNginx => "BEGIN; DROP TABLE tblNginxConf; COMMIT;",
+                DBClient::LibDeploy => "BEGIN; DROP TABLE tblDeployData; COMMIT",
             })
             .unwrap();
     }
@@ -114,6 +125,18 @@ pub fn db_migration(db: DBClient, force: Option<DBClient>) -> Option<u8> {
             .query_row(
                 "SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name=?1",
                 params!["tblNginxConf"],
+                |data| data.get::<usize, usize>(0),
+            )
+            .unwrap()
+            != 1)
+            .then(|| {
+                create_tables(Some(DBClient::LibNginx));
+                Some(0)
+            }),
+        DBClient::LibDeploy => (open_database()
+            .query_row(
+                "SELECT COUNT(name) FROM sqlite_master WHERE type='table AND name=?1",
+                params!["tblDeployData"],
                 |data| data.get::<usize, usize>(0),
             )
             .unwrap()

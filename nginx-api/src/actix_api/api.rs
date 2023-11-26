@@ -1,15 +1,18 @@
 use super::{
     super::init_migration,
+    obj_req::ThemeInfo,
     obj_response::{ActixCustomResponse, CustomDnsStruct},
     querystring::{AddNginxQueryString, ListNginxQueryString},
-    HttpResponse,
+    HttpResponse, MultipartForm,
 };
 use actix_web::{
     delete, get, post, put,
     web::{Json, Query},
     Error, HttpRequest,
 };
+use libdeploy_wrapper::{dbtools as depl_dbools, fstools as depl_fstools};
 use libnginx_wrapper::{
+    fstools,
     dbtools::crud::{
         select_all_by_feature_from_tbl_nginxconf, select_all_from_tbl_nginxconf,
         select_one_from_tbl_nginxconf,
@@ -24,7 +27,9 @@ pub async fn get_nginx_list(
     match qstring.get_server_name() {
         Some(server_name) => {
             let possible_data = match qstring.get_feature() {
-                Some(_) => select_one_from_tbl_nginxconf(server_name, qstring.get_feature().as_ref()),
+                Some(_) => {
+                    select_one_from_tbl_nginxconf(server_name, qstring.get_feature().as_ref())
+                }
                 None => select_one_from_tbl_nginxconf(server_name, None),
             };
             match possible_data {
@@ -37,7 +42,9 @@ pub async fn get_nginx_list(
         None => Ok(HttpResponse::Ok().json(ActixCustomResponse::new_vec_obj(
             200,
             match qstring.get_feature() {
-                Some(feature) => select_all_by_feature_from_tbl_nginxconf(feature.to_string().as_str()),
+                Some(feature) => {
+                    select_all_by_feature_from_tbl_nginxconf(feature.to_string().as_str())
+                }
                 None => select_all_from_tbl_nginxconf(),
             },
         ))),
@@ -155,4 +162,56 @@ pub async fn get_dns(req: HttpRequest) -> Result<HttpResponse, ActixCustomRespon
             String::from("Auto"),
         ),
     )))
+}
+
+#[post("/nginx/hosting")]
+pub async fn post_hosting(
+    args: MultipartForm<ThemeInfo>,
+) -> Result<HttpResponse, ActixCustomResponse> {
+    let args = args.into_inner();
+
+    let available_port_handle = tokio::spawn(depl_fstools::scan_available_port());
+
+    let theme_path = match depl_fstools::git_clone(args.get_theme_link(), &args.get_server_name()) {
+        Ok(theme_path) => Ok(theme_path),
+        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+    }?;
+
+    args.get_files().iter().for_each(|each| {
+        fstools::write_bin_file(
+            format!("{}/{}", theme_path, each.file_name.as_ref().unwrap()).as_str(),
+            &each.data,
+            false,
+        )
+        .unwrap()
+    });
+
+    let install_js_dep_handle = tokio::spawn(depl_fstools::install_js_dep(theme_path.clone()));
+
+    let available_port = available_port_handle.await.unwrap();
+    let vite_config_file = format!("{}/vite.config.ts", theme_path);
+    let vite_config = fstools::read_file(vite_config_file.as_str())
+        .replace("{{THEME_PORT}}", available_port.to_string().as_str());
+
+    fstools::write_bin_file(&vite_config_file, vite_config.as_bytes(), false)
+        .unwrap();
+
+    match install_js_dep_handle.await.unwrap() {
+        Ok(()) => Ok(()),
+        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+    }?;
+
+    match depl_fstools::build_js(theme_path.as_str()).await {
+        Ok(()) => Ok(()),
+        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+    }?;
+
+    let process_id = match depl_fstools::spawn_child(theme_path.as_str()).await {
+        Ok(process_id) => Ok(process_id),
+        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+    }?;
+
+    depl_dbools::insert_tbl_deploydata(process_id, available_port, &theme_path, args.get_server_name());
+
+    Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(200, String::from("Ok"))))
 }
