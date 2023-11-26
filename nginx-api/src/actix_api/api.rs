@@ -12,11 +12,11 @@ use actix_web::{
 };
 use libdeploy_wrapper::{dbtools as depl_dbools, fstools as depl_fstools};
 use libnginx_wrapper::{
-    fstools,
     dbtools::crud::{
         select_all_by_feature_from_tbl_nginxconf, select_all_from_tbl_nginxconf,
         select_one_from_tbl_nginxconf,
     },
+    fstools,
     http_server::{nginx_obj::NginxObj, remake_ssl, remove_nginx_conf, target_site::TargetSite},
 };
 
@@ -193,8 +193,7 @@ pub async fn post_hosting(
     let vite_config = fstools::read_file(vite_config_file.as_str())
         .replace("{{THEME_PORT}}", available_port.to_string().as_str());
 
-    fstools::write_bin_file(&vite_config_file, vite_config.as_bytes(), false)
-        .unwrap();
+    fstools::write_bin_file(&vite_config_file, vite_config.as_bytes(), false).unwrap();
 
     match install_js_dep_handle.await.unwrap() {
         Ok(()) => Ok(()),
@@ -211,7 +210,12 @@ pub async fn post_hosting(
         Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
     }?;
 
-    depl_dbools::insert_tbl_deploydata(process_id, available_port, &theme_path, args.get_server_name());
+    depl_dbools::insert_tbl_deploydata(
+        process_id,
+        available_port,
+        &theme_path,
+        args.get_server_name(),
+    );
 
     Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(200, String::from("Ok"))))
 }
