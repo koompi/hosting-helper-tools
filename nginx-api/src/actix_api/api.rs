@@ -1,5 +1,5 @@
 use super::{
-    super::init_migration,
+    super::nginx_migration,
     obj_req::ThemeInfo,
     obj_response::{ActixCustomResponse, CustomDnsStruct},
     querystring::{AddNginxQueryString, ListNginxQueryString},
@@ -117,7 +117,7 @@ pub async fn post_force_cert(req: HttpRequest) -> Result<HttpResponse, ActixCust
 
 #[post("/migration/force")]
 pub async fn post_force_migration() -> Result<HttpResponse, Error> {
-    match init_migration(true) {
+    match nginx_migration(true) {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;
@@ -205,7 +205,7 @@ pub async fn post_hosting(
         Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
     }?;
 
-    let process_id = match depl_fstools::spawn_child(theme_path.as_str()).await {
+    let process_id = match depl_fstools::pm2_run(&theme_path, args.get_server_name()).await {
         Ok(process_id) => Ok(process_id),
         Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
     }?;

@@ -1,5 +1,6 @@
 use actix_web::{middleware, App, HttpServer};
-use libnginx_wrapper::init_migration;
+use libnginx_wrapper::init_migration as nginx_migration;
+use libdeploy_wrapper::init_migration as deployment_migration;
 
 mod actix_api;
 
@@ -11,7 +12,10 @@ async fn main() -> std::io::Result<()> {
     let hosting_port = dotenv::var("HOSTING_PORT").unwrap();
     let hosting = format!("{hosting_addr}:{hosting_port}");
 
-    init_migration(false).unwrap();
+    let depl_mig = deployment_migration();
+    nginx_migration(false).unwrap();
+    depl_mig.await.unwrap();
+
 
     let server = HttpServer::new(move || {
         let cors_allowed_addr = dotenv::var("CORS_ALLOWED_ADDR").unwrap();
@@ -40,6 +44,7 @@ async fn main() -> std::io::Result<()> {
             .service(actix_api::api::post_add_nginx)
             .service(actix_api::api::post_force_cert)
             .service(actix_api::api::post_force_migration)
+            .service(actix_api::api::post_hosting)
             .service(actix_api::api::delete_remove_nginx)
             .service(actix_api::api::put_update_target_site)
         // )

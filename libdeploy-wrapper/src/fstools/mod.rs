@@ -1,14 +1,18 @@
 use git2::{build::RepoBuilder, Cred, FetchOptions, RemoteCallbacks};
 use rand::Rng;
-use std::{env, fs, path::Path, net::{TcpListener, SocketAddr}};
+use std::{
+    fs,
+    net::{SocketAddr, TcpListener},
+    path::Path,
+};
 use tokio::process::Command;
 
 pub async fn scan_available_port() -> u16 {
     loop {
         let random_port = rand::thread_rng().gen_range(1024..65535) as u16;
-        match TcpListener::bind(SocketAddr::from(([127,0,0,1], random_port))) {
+        match TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], random_port))) {
             Ok(_) => break random_port,
-            Err(_) => continue
+            Err(_) => continue,
         }
     }
 }
@@ -39,21 +43,34 @@ pub async fn build_js<S: AsRef<str>>(theme_path: S) -> Result<(), (u16, String)>
     }
 }
 
-pub async fn spawn_child(theme_path: &str) -> Result<u32, (u16, String)> {
-    let child_command = Command::new("pnpm")
+pub async fn pm2_run(theme_path: &str, server_name: &str) -> Result<u32, (u16, String)> {
+    match Command::new("pm2")
         .current_dir(theme_path)
-        .arg("run")
         .arg("start")
-        .spawn();
-    let mut child_id = 0u32;
-    match child_command {
-        Ok(mut child) => Ok({
-            child_id = child.id().unwrap();
-            let _ = child.wait().await;
-        }),
-        Err(e) => Err((500, e.to_string())),
+        .args(["--name", server_name])
+        .arg("pnpm")
+        .arg("--")
+        .arg("start")
+        .output()
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(err) => Err((500, err.to_string())),
     }?;
-    Ok(child_id)
+
+    let checkid = String::from_utf8(
+        Command::new("pm2")
+            .current_dir(theme_path)
+            .arg("id")
+            .arg(server_name)
+            .output()
+            .await
+            .unwrap()
+            .stdout,
+    )
+    .unwrap().trim().parse::<u32>().unwrap();
+
+    Ok(checkid)
 }
 
 pub fn git_clone(url: &str, server_name: &str) -> Result<String, (u16, String)> {
@@ -73,14 +90,25 @@ pub fn git_clone(url: &str, server_name: &str) -> Result<String, (u16, String)> 
 
 fn setup_git_builder() -> RepoBuilder<'static> {
     let mut callbacks = RemoteCallbacks::new();
-    callbacks.credentials(|_url, username_from_url, _allowed_types| {
-        Cred::ssh_key(
-            username_from_url.unwrap(),
-            None,
-            Path::new(&format!("{}/.ssh/id_rsa", env::var("HOME").unwrap())),
-            None,
-        )
-    });
+    callbacks.credentials(
+        |_url, username_from_url, _allowed_types| {
+            Cred::ssh_key_from_memory(
+                username_from_url.unwrap(),
+                None,
+                dotenv::var("THEME_GIT_KEY").unwrap().as_ref(),
+                None,
+            )
+        },
+        // {
+        // Cred::ssh_key(
+        //     username_from_url.unwrap(),
+        //     // Some(Path::new(&format!("{}/.ssh/id_ed25519.pub", env::var("HOME").unwrap()))),
+        //     None,
+        //     Path::new(&format!("{}/.ssh/id_rsa", env::var("HOME").unwrap())),
+        //     None,
+        // )
+        // }
+    );
 
     let mut fo = FetchOptions::new();
     fo.remote_callbacks(callbacks);
