@@ -9,12 +9,12 @@ use std::{
 pub mod read_ops;
 pub(crate) mod write_ops;
 
-pub fn write_bin_file(
+pub fn write_file(
     destination_file: &str,
-    config: &[u8],
+    config: &str,
     is_continuing: bool,
 ) -> Result<(), (u16, String)> {
-    write_ops::write_bin_file(destination_file, config, is_continuing)
+    write_ops::write_file(destination_file, config, is_continuing)
 }
 
 pub fn read_file<S: AsRef<str>>(source_file: S) -> String {

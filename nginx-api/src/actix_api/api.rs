@@ -1,9 +1,9 @@
 use super::{
     super::nginx_migration,
-    obj_req::ThemeInfo,
+    obj_req::ThemesData,
     obj_response::{ActixCustomResponse, CustomDnsStruct},
     querystring::{AddNginxQueryString, ListNginxQueryString},
-    HttpResponse, MultipartForm,
+    HttpResponse,
 };
 use actix_web::{
     delete, get, post, put,
@@ -165,22 +165,25 @@ pub async fn get_dns(req: HttpRequest) -> Result<HttpResponse, ActixCustomRespon
 }
 
 #[post("/nginx/hosting")]
-pub async fn post_hosting(
-    args: MultipartForm<ThemeInfo>,
-) -> Result<HttpResponse, ActixCustomResponse> {
+pub async fn post_hosting(args: Json<ThemesData>) -> Result<HttpResponse, ActixCustomResponse> {
     let args = args.into_inner();
 
     let available_port_handle = tokio::spawn(depl_fstools::scan_available_port());
 
-    let theme_path = match depl_fstools::git_clone(args.get_theme_link(), &args.get_server_name()) {
-        Ok(theme_path) => Ok(theme_path),
-        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
-    }?;
+    let theme_path =
+        match depl_fstools::git_clone(args.get_theme_link(), &args.get_server_name()).await {
+            Ok(theme_path) => Ok(theme_path),
+            Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+        }?;
 
     args.get_files().iter().for_each(|each| {
-        fstools::write_bin_file(
-            format!("{}/{}", theme_path, each.file_name.as_ref().unwrap()).as_str(),
-            &each.data,
+        let destination_file = match each.get_path() {
+            Some(custom_path) => format!("{}/{}/{}", theme_path, custom_path, each.get_filename()),
+            None => format!("{}/{}", theme_path, each.get_filename()),
+        };
+        fstools::write_file(
+            destination_file.as_str(),
+            &each.get_data().to_string(),
             false,
         )
         .unwrap()
@@ -189,11 +192,16 @@ pub async fn post_hosting(
     let install_js_dep_handle = tokio::spawn(depl_fstools::install_js_dep(theme_path.clone()));
 
     let available_port = available_port_handle.await.unwrap();
-    let vite_config_file = format!("{}/vite.config.ts", theme_path);
-    let vite_config = fstools::read_file(vite_config_file.as_str())
-        .replace("{{THEME_PORT}}", available_port.to_string().as_str());
 
-    fstools::write_bin_file(&vite_config_file, vite_config.as_bytes(), false).unwrap();
+    let mut env_map = args.get_env();
+    env_map.insert(String::from("VITE_PORT"), available_port.to_string());
+    let env_data = env_map
+        .iter()
+        .map(|(each_key, each_value)| format!("{}={}", each_key, each_value))
+        .collect::<Vec<String>>()
+        .join("\n");
+
+    fstools::write_file(&format!("{}/.env", theme_path), &env_data, false).unwrap();
 
     match install_js_dep_handle.await.unwrap() {
         Ok(()) => Ok(()),

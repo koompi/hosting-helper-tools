@@ -9,7 +9,6 @@ edition = "2021"
 actix-cors = "*"
 actix-web = "*"
 actix-web-lab = "*"
-actix-multipart = "*"
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 chrono = "*"

@@ -18,10 +18,11 @@ pub async fn scan_available_port() -> u16 {
 }
 
 pub async fn install_js_dep<S: AsRef<str>>(theme_path: S) -> Result<(), (u16, String)> {
-    match Command::new("pnpm")
+    match Command::new("su")
         .current_dir(theme_path.as_ref())
-        .arg("install")
-        .arg("--force")
+        .arg("-c")
+        .arg("pnpm install --force")
+        .arg(dotenv::var("THEME_LOCAL_USER").unwrap())
         .output()
         .await
     {
@@ -31,10 +32,11 @@ pub async fn install_js_dep<S: AsRef<str>>(theme_path: S) -> Result<(), (u16, St
 }
 
 pub async fn build_js<S: AsRef<str>>(theme_path: S) -> Result<(), (u16, String)> {
-    match Command::new("pnpm")
+    match Command::new("su")
         .current_dir(theme_path.as_ref())
-        .arg("run")
-        .arg("build")
+        .arg("-c")
+        .arg("pnpm run build")
+        .arg(dotenv::var("THEME_LOCAL_USER").unwrap())
         .output()
         .await
     {
@@ -44,13 +46,23 @@ pub async fn build_js<S: AsRef<str>>(theme_path: S) -> Result<(), (u16, String)>
 }
 
 pub async fn pm2_run(theme_path: &str, server_name: &str) -> Result<u32, (u16, String)> {
-    match Command::new("pm2")
+    match Command::new("su")
         .current_dir(theme_path)
-        .arg("start")
-        .args(["--name", server_name])
-        .arg("pnpm")
-        .arg("--")
-        .arg("start")
+        .arg("-c")
+        .arg(format!("pm2 start --name '{}' pnpm -- start", server_name))
+        .arg(dotenv::var("THEME_LOCAL_USER").unwrap())
+        .output()
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(err) => Err((500, err.to_string())),
+    }?;
+
+    match Command::new("su")
+        .current_dir(theme_path)
+        .arg("-c")
+        .arg("pm2 save")
+        .arg(dotenv::var("THEME_LOCAL_USER").unwrap())
         .output()
         .await
     {
@@ -68,12 +80,16 @@ pub async fn pm2_run(theme_path: &str, server_name: &str) -> Result<u32, (u16, S
             .unwrap()
             .stdout,
     )
-    .unwrap().trim().parse::<u32>().unwrap();
+    .unwrap()
+    .replace(&['[',']'], "")
+    .trim()
+    .parse::<u32>()
+    .unwrap();
 
     Ok(checkid)
 }
 
-pub fn git_clone(url: &str, server_name: &str) -> Result<String, (u16, String)> {
+pub async fn git_clone(url: &str, server_name: &str) -> Result<String, (u16, String)> {
     let theme_path = dotenv::var("THEME_BASE_PATH").unwrap() + "/" + server_name;
     let theme_path_obj = Path::new(&theme_path);
 
@@ -83,9 +99,12 @@ pub fn git_clone(url: &str, server_name: &str) -> Result<String, (u16, String)> 
 
     let mut builder = setup_git_builder();
     match builder.clone(url, theme_path_obj) {
-        Ok(_) => Ok(theme_path),
+        Ok(_) => Ok(()),
         Err(e) => Err((500, e.to_string())),
-    }
+    }?;
+
+    Command::new("chown").arg(dotenv::var("THEME_LOCAL_USER").unwrap()).arg(&theme_path).arg("-R").output().await.unwrap();
+    Ok(theme_path)
 }
 
 fn setup_git_builder() -> RepoBuilder<'static> {
