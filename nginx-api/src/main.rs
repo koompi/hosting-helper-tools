@@ -1,6 +1,7 @@
 use actix_web::{middleware, App, HttpServer};
 use libnginx_wrapper::init_migration as nginx_migration;
 use libdeploy_wrapper::init_migration as deployment_migration;
+use libcloudflare_wrapper::db_migration as cloudflare_migration;
 
 mod actix_api;
 
@@ -12,9 +13,12 @@ async fn main() -> std::io::Result<()> {
     let hosting_port = dotenv::var("HOSTING_PORT").unwrap();
     let hosting = format!("{hosting_addr}:{hosting_port}");
 
-    let depl_mig = deployment_migration();
+    let clfl_mig = tokio::spawn(cloudflare_migration(false));
+    let depl_mig = tokio::spawn(deployment_migration());
+    // cloudflare_migration(false)
     nginx_migration(false).unwrap();
-    depl_mig.await.unwrap();
+    clfl_mig.await.unwrap().unwrap();
+    depl_mig.await.unwrap().unwrap();
 
 
     let server = HttpServer::new(move || {
