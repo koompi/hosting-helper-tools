@@ -1,6 +1,6 @@
 [workspace]
 members=[
-    "libnginx-wrapper", "nginx-cli", "nginx-api", "libcloudflare-wrapper", "libdatabase"
+    "libnginx-wrapper", "nginx-cli", "nginx-api", "libcloudflare-wrapper", "libdatabase", "libdeploy-wrapper"
 ]
 resolver = "2"
 

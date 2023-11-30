@@ -48,7 +48,7 @@ async fn main() {
         Some(("add", add_matches)) => match_add::match_add(add_matches).await,
         Some(("delete", delete_matches)) => match_del::match_del(delete_matches),
         Some(("list", list_matches)) => match_list::match_list(list_matches),
-        Some(("force", force_matches)) => match_force::match_force(force_matches),
+        Some(("force", force_matches)) => match_force::match_force(force_matches).await,
         Some(("update", update_matches)) => match_update::match_update(update_matches).await,
         _ => unreachable!(),
     }

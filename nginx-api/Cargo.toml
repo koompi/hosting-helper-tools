@@ -19,3 +19,4 @@ tokio = { version = "*", features = ["full"] }
 libnginx-wrapper = { path = "../libnginx-wrapper" }
 libdatabase = { path = "../libdatabase" }
 libcloudflare-wrapper ={ path = "../libcloudflare-wrapper" }
+libdeploy-wrapper = { path = "../libdeploy-wrapper" }
