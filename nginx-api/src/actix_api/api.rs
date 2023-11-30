@@ -1,5 +1,5 @@
 use super::{
-    super::nginx_migration,
+    super::{nginx_migration, cloudflare_migration, deployment_migration},
     obj_req::ThemesData,
     obj_response::{ActixCustomResponse, CustomDnsStruct},
     querystring::{AddNginxQueryString, ListNginxQueryString},
@@ -118,6 +118,14 @@ pub async fn post_force_cert(req: HttpRequest) -> Result<HttpResponse, ActixCust
 #[post("/migration/force")]
 pub async fn post_force_migration() -> Result<HttpResponse, Error> {
     match nginx_migration(true) {
+        Ok(()) => Ok(()),
+        Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
+    }?;
+    match cloudflare_migration(true).await {
+        Ok(()) => Ok(()),
+        Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
+    }?;
+    match deployment_migration().await {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;
