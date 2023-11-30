@@ -1,5 +1,5 @@
 use super::{
-    super::{nginx_migration, cloudflare_migration, deployment_migration},
+    super::{cloudflare_migration, deployment_migration, nginx_migration},
     obj_req::ThemesData,
     obj_response::{ActixCustomResponse, CustomDnsStruct},
     querystring::{AddNginxQueryString, ListNginxQueryString},
@@ -125,7 +125,7 @@ pub async fn post_force_migration() -> Result<HttpResponse, Error> {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;
-    match deployment_migration().await {
+    match deployment_migration(false).await {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;
@@ -175,6 +175,14 @@ pub async fn get_dns(req: HttpRequest) -> Result<HttpResponse, ActixCustomRespon
 #[post("/nginx/hosting")]
 pub async fn post_hosting(args: Json<ThemesData>) -> Result<HttpResponse, ActixCustomResponse> {
     let args = args.into_inner();
+
+    match depl_dbools::query_existence_from_tbl_deploydata(&args.get_server_name()) {
+        true => Err(ActixCustomResponse::new_text(
+            400,
+            format!("Server Name '{}' already existed!", &args.get_server_name()),
+        )),
+        false => Ok(()),
+    }?;
 
     let available_port_handle = tokio::spawn(depl_fstools::scan_available_port());
 
@@ -233,5 +241,8 @@ pub async fn post_hosting(args: Json<ThemesData>) -> Result<HttpResponse, ActixC
         args.get_server_name(),
     );
 
-    Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(200, String::from("Ok"))))
+    Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(
+        200,
+        format!("{}", available_port),
+    )))
 }

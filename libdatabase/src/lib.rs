@@ -135,14 +135,14 @@ pub fn db_migration(db: DBClient, force: Option<DBClient>) -> Option<u8> {
             }),
         DBClient::LibDeploy => (open_database()
             .query_row(
-                "SELECT COUNT(name) FROM sqlite_master WHERE type='table AND name=?1",
+                "SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name=?1",
                 params!["tblDeployData"],
                 |data| data.get::<usize, usize>(0),
             )
             .unwrap()
             != 1)
             .then(|| {
-                create_tables(Some(DBClient::LibNginx));
+                create_tables(Some(DBClient::LibDeploy));
                 Some(0)
             }),
     }?

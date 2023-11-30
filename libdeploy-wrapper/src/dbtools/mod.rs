@@ -1,5 +1,16 @@
 use libdatabase::{open_database, params, Statement, ToSql};
 
+pub fn query_existence_from_tbl_deploydata(server_name: &str) -> bool {
+    let connection = open_database();
+
+    let mut stmt = connection
+        .prepare("SELECT EXISTS(SELECT ServerName FROM tblDeployData WHERE ServerName=? LIMIT 1);")
+        .unwrap();
+    let mut rows = stmt.query(&[server_name]).unwrap();
+
+    rows.next().unwrap().unwrap().get::<usize, u64>(0).unwrap() != 0
+}
+
 pub fn select_all_ports_from_tbl_deploydata() -> Vec<u16> {
     let database = open_database();
     let mut stmt = database

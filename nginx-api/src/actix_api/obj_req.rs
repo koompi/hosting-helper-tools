@@ -1,28 +1,6 @@
 use std::collections::HashMap;
-
-// use super::{bytes::Bytes, text::Text, MultipartForm};
 use serde::Deserialize;
 use serde_json::Value;
-
-// #[derive(MultipartForm)]
-// pub struct ThemeInfo {
-//     theme_link: Text<String>,
-//     server_name: Text<String>,
-//     files: Vec<Bytes>,
-// }
-
-// impl ThemeInfo {
-//     pub fn get_theme_link(&self) ->  &String {
-//         &self.theme_link
-//     }
-//     pub fn get_server_name(&self) ->  &String {
-//         &self.server_name
-//     }
-//     pub fn get_files(&self) ->  &Vec<Bytes> {
-//         &self.files
-//     }
-
-// }
 
 #[derive(Deserialize)]
 pub struct ThemesData {
@@ -53,16 +31,6 @@ impl ThemesData {
     pub fn get_files(&self) -> &Vec<FilesData> {
         &self.files
     }
-
-    // pub fn get_file(&self) -> &Vec<FilesData> {
-    //     &self
-    //         .files
-    //         .as_array()
-    //         .unwrap()
-    //         .iter()
-    //         .map(|each| serde_json::from_value::<FilesData>(*each).unwrap())
-    //         .collect::<Vec<FilesData>>()
-    // }
 }
 
 #[derive(Deserialize)]

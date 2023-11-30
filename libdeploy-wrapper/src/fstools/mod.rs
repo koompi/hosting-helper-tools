@@ -70,21 +70,23 @@ pub async fn pm2_run(theme_path: &str, server_name: &str) -> Result<u32, (u16, S
         Err(err) => Err((500, err.to_string())),
     }?;
 
-    let checkid = String::from_utf8(
-        Command::new("pm2")
-            .current_dir(theme_path)
-            .arg("id")
-            .arg(server_name)
-            .output()
-            .await
-            .unwrap()
-            .stdout,
-    )
-    .unwrap()
-    .replace(&['[',']'], "")
-    .trim()
-    .parse::<u32>()
-    .unwrap();
+    // let checkid = String::from_utf8(
+    //     Command::new("pm2")
+    //         .current_dir(theme_path)
+    //         .arg("id")
+    //         .arg(server_name)
+    //         .output()
+    //         .await
+    //         .unwrap()
+    //         .stdout,
+    // )
+    // .unwrap()
+    // .replace(&['[',']'], "")
+    // .trim()
+    // .parse::<u32>()
+    // .unwrap();
+
+    let checkid = 0;
 
     Ok(checkid)
 }
