@@ -15,14 +15,14 @@ pub async fn init_migration(force: bool) -> Result<(), (u16, String)> {
 
     Command::new("pm2").arg("startup").output().await.unwrap();
 
-    libdatabase::db_migration(
+    let _ = libdatabase::db_migration(
         libdatabase::DBClient::LibDeploy,
         match force {
             true => Some(libdatabase::DBClient::LibDeploy),
             false => None,
         },
     )
-    .unwrap();
+    .unwrap_or_else(|| 0);
     Ok(())
 }
 
