@@ -56,7 +56,7 @@ pub(crate) fn create_tables(db: Option<DBClient>) {
                 },
                 DBClient::LibDeploy => {
                     "CREATE TABLE tblDeployData (
-                ProcessId INTEGER CHECK(ProcessId >= 0 AND ProcessId <= 4294967295) NOT NULL UNIQUE,
+                ProcessId INTEGER CHECK(ProcessId >= 0 AND ProcessId <= 4294967295) NOT NULL,
                 PortNumber INTEGER  CHECK(PortNumber > 1023  AND PortNumber < 65535) NOT NULL UNIQUE,
                 ThemePath TEXT NOT NULL UNIQUE,
                 ServerName VARCHAR(100) NOT NULL UNIQUE
