@@ -2,3 +2,7 @@
 **/.env
 **/*.db
 **/.migrated
+/bin
+!/bin/nginx-api
+!/bin/nginx-cli
+!/bin/sample.env
