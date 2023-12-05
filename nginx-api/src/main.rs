@@ -21,6 +21,8 @@ async fn main() -> std::io::Result<()> {
     depl_mig.await.unwrap().unwrap();
 
     let server = HttpServer::new(move || {
+        let client = actix_web::web::Data::new(libcloudflare_wrapper::get_client());
+        let headers = actix_web::web::Data::new(libcloudflare_wrapper::get_headers());
         let cors_allowed_addr = dotenv::var("CORS_ALLOWED_ADDR").unwrap();
         let production = dotenv::var("PRODUCTION").unwrap().parse::<bool>().unwrap();
         let cors = match production {
@@ -37,6 +39,8 @@ async fn main() -> std::io::Result<()> {
             false => actix_cors::Cors::permissive(),
         };
         App::new()
+            .app_data(client)
+            .app_data(headers)
             .wrap(cors)
             .wrap(middleware::Logger::default())
             .wrap(actix_web_lab::middleware::from_fn(

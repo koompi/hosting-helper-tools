@@ -5,3 +5,4 @@ mod data_val;
 pub mod default;
 mod post_ops;
 mod put_ops;
+mod del_ops;

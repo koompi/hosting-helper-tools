@@ -1,3 +1,4 @@
+use libcloudflare_wrapper::{Client, HeaderMap};
 use url::Url;
 
 use super::{
@@ -90,13 +91,27 @@ impl NginxObj {
 
     pub async fn setup_cloudflare(
         &self,
+        client: Option<Client>,
+        headers: Option<HeaderMap>,
         switch: bool,
         ip_check: bool,
     ) -> Result<(), (u16, String)> {
-        let client = libcloudflare_wrapper::get_client();
+        let client = match client {
+            Some(client) => client,
+            None => libcloudflare_wrapper::get_client(),
+        };
+        let headers = match headers {
+            Some(headers) => headers,
+            None => libcloudflare_wrapper::get_headers(),
+        };
 
         if switch {
-            libcloudflare_wrapper::setup_domain(&self.get_server_name()).await
+            libcloudflare_wrapper::setup_domain(
+                &self.get_server_name(),
+                Some(client),
+                Some(headers),
+            )
+            .await
         } else if ip_check {
             let our_ip = libcloudflare_wrapper::get_public_ip(&client, None).await;
             let domain_ip =

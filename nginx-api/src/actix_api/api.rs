@@ -55,6 +55,8 @@ pub async fn get_nginx_list(
 pub async fn post_add_nginx(
     args: Json<NginxObj>,
     qstring: Query<AddNginxQueryString>,
+    client: actix_web::web::Data<libcloudflare_wrapper::Client>,
+    headers: actix_web::web::Data<libcloudflare_wrapper::HeaderMap>,
 ) -> Result<HttpResponse, ActixCustomResponse> {
     let args = args.into_inner();
 
@@ -66,7 +68,12 @@ pub async fn post_add_nginx(
     }?;
 
     match args
-        .setup_cloudflare(*qstring.get_cloudflare_bool(), *qstring.get_ipcheck_bool())
+        .setup_cloudflare(
+            Some(client.into_inner().as_ref().to_owned()),
+            Some(headers.into_inner().as_ref().to_owned()),
+            *qstring.get_cloudflare_bool(),
+            *qstring.get_ipcheck_bool(),
+        )
         .await
     {
         Ok(()) => Ok(()),
@@ -133,7 +140,11 @@ pub async fn post_force_migration() -> Result<HttpResponse, Error> {
 }
 
 #[delete("/nginx/delete/{server_name}")]
-pub async fn delete_remove_nginx(req: HttpRequest) -> Result<HttpResponse, ActixCustomResponse> {
+pub async fn delete_remove_nginx(
+    req: HttpRequest,
+    client: actix_web::web::Data<libcloudflare_wrapper::Client>,
+    headers: actix_web::web::Data<libcloudflare_wrapper::HeaderMap>,
+) -> Result<HttpResponse, ActixCustomResponse> {
     let server_name = match req.match_info().get("server_name") {
         Some(data) => Ok(data),
         None => Err(ActixCustomResponse::new_text(
@@ -142,7 +153,13 @@ pub async fn delete_remove_nginx(req: HttpRequest) -> Result<HttpResponse, Actix
         )),
     }?;
 
-    match remove_nginx_conf(server_name.as_ref()) {
+    match remove_nginx_conf(
+        Some(client.into_inner().as_ref().clone()),
+        Some(headers.into_inner().as_ref().clone()),
+        server_name.as_ref(),
+    )
+    .await
+    {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;

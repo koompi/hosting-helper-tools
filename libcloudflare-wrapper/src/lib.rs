@@ -5,8 +5,8 @@ mod filtered_datatype;
 use chrono::{DateTime, NaiveTime, Utc};
 use cloudflare_datatype::{ObjResponse, ObjResult};
 use filtered_datatype::zones::CloudflarePending;
+pub use reqwest::{header::HeaderMap, Client, Method};
 use tldextract::TldOption;
-use reqwest::{Client, header::HeaderMap, Method};
 
 pub async fn db_migration(force: bool) -> Result<(), (u16, String)> {
     dbtools::db_migration(force).await
@@ -16,8 +16,24 @@ pub fn get_client() -> Client {
     ObjResponse::get_client()
 }
 
-pub fn _get_headers() -> HeaderMap {
+pub fn get_headers() -> HeaderMap {
     ObjResponse::get_headers()
+}
+
+pub async fn delete_records(
+    client: Option<Client>,
+    headers: Option<HeaderMap>,
+    subdomain: &str,
+) -> Result<(), (u16, std::string::String)> {
+    let client = match client {
+        Some(client) => client,
+        None => ObjResponse::get_client(),
+    };
+    let headers = match headers {
+        Some(headers) => headers,
+        None => ObjResponse::get_headers(),
+    };
+    ObjResponse::del_record(&client, &headers, subdomain).await
 }
 
 pub async fn get_public_ip(client: &Client, domain: Option<&str>) -> String {
@@ -65,9 +81,36 @@ pub async fn get_public_ip(client: &Client, domain: Option<&str>) -> String {
     }
 }
 
-pub async fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
-    let client = ObjResponse::get_client();
-    let headers = ObjResponse::get_headers();
+pub fn get_zone_id_from_domain(full_domain_name: &str) -> Result<String, String> {
+    let tldextracted_domain = TldOption::default()
+        .build()
+        .extract(full_domain_name)
+        .unwrap();
+    let domain_tld =
+        tldextracted_domain.domain.unwrap() + "." + tldextracted_domain.suffix.as_ref().unwrap();
+    let data = match dbtools::read_ops::query_from_tbl_cloudflare_data(&domain_tld) {
+        Some(data) => Ok(data),
+        None => Err(String::from("Doesn't exist!")),
+    }?;
+    let id = data.get_zone_id();
+    Ok(id.to_string())
+}
+
+pub async fn setup_domain(
+    full_domain_name: &str,
+    client: Option<Client>,
+    headers: Option<HeaderMap>,
+) -> Result<(), (u16, String)> {
+    let client = match client {
+        Some(client) => client,
+        None => ObjResponse::get_client(),
+    };
+    let headers = match headers {
+        Some(headers) => headers,
+        None => ObjResponse::get_headers(),
+    };
+    // let client = ObjResponse::get_client();
+    // let headers = ObjResponse::get_headers();
     let tldextracted_domain = TldOption::default()
         .build()
         .extract(full_domain_name)
@@ -79,7 +122,6 @@ pub async fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
     };
     let domain_tld =
         tldextracted_domain.domain.unwrap() + "." + tldextracted_domain.suffix.as_ref().unwrap();
-
 
     match dbtools::read_ops::query_from_tbl_cloudflare_pending(&domain_tld) {
         Some(domain) => match domain.is_expired() {
@@ -179,17 +221,16 @@ pub async fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
 
     match result_response.is_empty() {
         true => Ok(()),
-        false => {
-            match result_response.result.unwrap() {
-                ObjResult::ZoneData(zone) => Err({
-                    let server_name = zone.name;
-                    let newdns = serde_json::json!(zone.name_servers).to_string();
-                    let olddns = zone
-                        .original_name_servers
-                        .as_ref()
-                        .and_then(|nameservers| Some(serde_json::json!(nameservers).to_string()));
+        false => match result_response.result.unwrap() {
+            ObjResult::ZoneData(zone) => Err({
+                let server_name = zone.name;
+                let newdns = serde_json::json!(zone.name_servers).to_string();
+                let olddns = zone
+                    .original_name_servers
+                    .as_ref()
+                    .and_then(|nameservers| Some(serde_json::json!(nameservers).to_string()));
 
-                    let error_message = match zone.original_name_servers.as_ref() {
+                let error_message = match zone.original_name_servers.as_ref() {
                         Some(dns) => format!(
                             "Please remove these \n{} at your Registra {} \nand replace with these \n{}",
                             dns.join("\n"),
@@ -201,28 +242,25 @@ pub async fn setup_domain(full_domain_name: &str) -> Result<(), (u16, String)> {
                             &zone.original_registrar.as_ref().unwrap_or(&String::new()), &zone.name_servers.join("\n")
                         )
                     };
-                    let registra = zone
-                        .original_registrar
-                        .as_deref()
-                        .and_then(|data| data.split(",").next());
+                let registra = zone
+                    .original_registrar
+                    .as_deref()
+                    .and_then(|data| data.split(",").next());
 
-                    let last_check = chrono::Utc::now().to_rfc3339();
-                    dbtools::write_ops::insert_tbl_cloudflare_pending(
-                        &server_name,
-                        &newdns,
-                        olddns,
-                        registra,
-                        &last_check,
-                    );
+                let last_check = chrono::Utc::now().to_rfc3339();
+                dbtools::write_ops::insert_tbl_cloudflare_pending(
+                    &server_name,
+                    &newdns,
+                    olddns,
+                    registra,
+                    &last_check,
+                );
 
-                    (503, error_message)
-                }),
-                ObjResult::DNSRecord(_) => {
-                    Ok(std::thread::sleep(std::time::Duration::from_secs(5)))
-                }
-                _ => unreachable!(),
-            }
-        }
+                (503, error_message)
+            }),
+            ObjResult::DNSRecord(_) => Ok(std::thread::sleep(std::time::Duration::from_secs(5))),
+            _ => unreachable!(),
+        },
     }?;
 
     Ok(())

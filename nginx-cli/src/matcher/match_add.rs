@@ -82,7 +82,7 @@ pub(crate) async fn match_add(matches: &ArgMatches) {
         feature,
     ) {
         Ok(data_obj) => {
-            match data_obj.setup_cloudflare(cloudflare, ip_check).await {
+            match data_obj.setup_cloudflare(None, None, cloudflare, ip_check).await {
                 Ok(()) => match data_obj.finish(ssl).await {
                     Ok(()) => println!("Successfully added {}", data_obj.get_server_name()),
                     Err((code, message)) => eprintln!("Error {code}: {message}"),

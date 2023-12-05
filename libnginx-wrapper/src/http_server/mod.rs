@@ -6,7 +6,11 @@ pub mod nginx_features;
 pub mod nginx_obj;
 pub mod target_site;
 
-pub fn remove_nginx_conf(server_name: &str) -> Result<(), (u16, String)> {
+pub async fn remove_nginx_conf(
+    client: Option<libcloudflare_wrapper::Client>,
+    headers: Option<libcloudflare_wrapper::HeaderMap>,
+    server_name: &str,
+) -> Result<(), (u16, String)> {
     let redirect_sites_path = dotenv::var("REDIRECT_SITES_PATH").unwrap();
     let proxy_sites_path = dotenv::var("PROXY_SITES_PATH").unwrap();
     let spa_sites_path = dotenv::var("SPA_SITES_PATH").unwrap();
@@ -79,6 +83,8 @@ pub fn remove_nginx_conf(server_name: &str) -> Result<(), (u16, String)> {
             false => Err((500, err.to_string())),
         },
     }?;
+
+    libcloudflare_wrapper::delete_records(client, headers, server_name).await.unwrap_or(());
 
     restart_reload_service();
     Ok(())
