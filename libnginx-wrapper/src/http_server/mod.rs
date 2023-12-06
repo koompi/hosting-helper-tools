@@ -84,7 +84,10 @@ pub async fn remove_nginx_conf(
         },
     }?;
 
-    libcloudflare_wrapper::delete_records(client, headers, server_name).await.unwrap_or(());
+    match libcloudflare_wrapper::delete_records(client, headers, server_name).await{
+        Ok(()) => (),
+        Err((code, message)) => println!("Code {}: {}", code, message),
+    }
 
     restart_reload_service();
     Ok(())

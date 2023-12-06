@@ -40,6 +40,8 @@ impl ObjResponse {
         let response = request.send().await.unwrap();
         let body = response.text().await.unwrap();
 
+        println!("Body: {}", body);
+
         serde_json::from_str::<Self>(&body).unwrap()
     }
 }

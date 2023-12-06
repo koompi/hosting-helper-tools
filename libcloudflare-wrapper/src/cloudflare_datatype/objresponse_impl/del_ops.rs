@@ -24,19 +24,24 @@ impl ObjResponse {
         }?;
         let zone_id = data.get_zone_id();
         // let id = data.get_zone_id();
+        println!("FN: {}", full_domain_name);
         let response = Self::get_records(&client, &headers, zone_id, Some(full_domain_name)).await;
         match response.unwrap() {
             Ok(()) => Ok(()),
             Err((code, message)) => Err((code, message)),
         }?;
 
-        let record_id = match response.result {
+        let records = match response.result {
             Some(data) => match data {
-                ObjResult::DNSRecord(record) => Ok(record.id),
+                ObjResult::DNSRecords(records) => match !records.is_empty() {
+                    true => Ok(records),
+                    false => Err((500, String::from("Vec Empty")))
+                },
                 _ => Err((500, String::from("Unexpected Response"))),
             },
             None => Err((500, String::from("Item doesn't exist!"))),
         }?;
+        let record_id = records.into_iter().next().unwrap().id;
         let request = client
             .delete(format!(
                 "https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records/{record_id}"
