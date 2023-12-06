@@ -92,7 +92,20 @@ pub async fn pm2_run(theme_path: &str, server_name: &str) -> Result<u32, (u16, S
 }
 
 pub async fn git_clone(url: &str, server_name: &str) -> Result<String, (u16, String)> {
-    let theme_path = dotenv::var("THEME_BASE_PATH").unwrap() + "/" + server_name;
+    let base_path = dotenv::var("THEME_BASE_PATH").unwrap();
+    let base_path = match std::path::Path::new(&base_path).is_absolute() {
+        true => base_path,
+        false => format!(
+            "{}/{base_path}",
+            std::env::current_exe()
+                .unwrap()
+                .parent()
+                .unwrap()
+                .to_str()
+                .unwrap()
+        ),
+    };
+    let theme_path = base_path + "/" + server_name;
     let theme_path_obj = Path::new(&theme_path);
 
     theme_path_obj
