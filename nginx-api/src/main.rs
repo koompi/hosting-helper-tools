@@ -47,13 +47,16 @@ async fn main() -> std::io::Result<()> {
                 actix_api::middleware::simple_auth,
             ))
             .service(actix_api::api::get_dns)
+            // Nginx
             .service(actix_api::api::get_nginx_list)
             .service(actix_api::api::post_add_nginx)
             .service(actix_api::api::post_force_cert)
             .service(actix_api::api::post_force_migration)
-            .service(actix_api::api::post_hosting)
             .service(actix_api::api::delete_remove_nginx)
             .service(actix_api::api::put_update_target_site)
+            // Hosting
+            .service(actix_api::api::post_hosting_add)
+            .service(actix_api::api::post_hosting_update_existing)
         // )
     })
     .bind(&hosting)?;

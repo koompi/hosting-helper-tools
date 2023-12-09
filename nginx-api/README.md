@@ -294,3 +294,119 @@ Response 200
 ---
 
 </details>
+
+<details close="close">
+<summary><b>POST</b> /hosting/add</summary>
+
+---
+
+| Header | Data Type |
+| ------ | --------- |
+| None   | None      |
+
+Body
+
+```json
+{
+  "server_name": "testingwebs23423.riverbase.org",
+  "theme_link": "git@github.com:koompi/riverbase-themes.git",
+  "env": {
+    "VITE_VARIABLE_BACKEND": "http://localhost:8000",
+    "VITE_VARIABLE_ID_STORE": "65677c4220d608fcf6eff114"
+  },
+  "files": [
+    {
+      "filename": "theme.json",
+      "path": "themes",
+      "data": {
+        "color": {
+          "primary": "#3674B7"
+        }
+      }
+    }
+  ]
+}
+```
+
+| Variable    | Data Type                                                                 |
+| ----------- | ------------------------------------------------------------------------- |
+| server_name | String: eg. testingwebs23423.riverbase.org                                |
+| theme_link  | String: eg. git@github.com:koompi/riverbase-themes.git                    |
+| env         | Json Object Hashmap                                                       |
+| files       | Json Object Array of filename, path and data of JSON Object without limit |
+
+Response 200
+
+```json
+{
+  "code": 200,
+  "message": "Ok"
+}
+```
+
+| Error | Body                   |
+| ----- | ---------------------- |
+| 400   | actual_error_goes_here |
+| 500   | actual_error_goes_here |
+
+---
+
+</details>
+
+<details close="close">
+<summary><b>POST</b> /hosting/update_existing</summary>
+
+---
+
+| Header | Data Type |
+| ------ | --------- |
+| None   | None      |
+
+Body
+
+```json
+{
+  "server_name": "testingwebs23423.riverbase.org",
+  "theme_link": "",
+  "env": {
+    "VITE_VARIABLE_BACKEND": "http://localhost:8000",
+    "VITE_VARIABLE_ID_STORE": "65677c4220d608fcf6eff114"
+  },
+  "files": [
+    {
+      "filename": "theme.json",
+      "path": "themes",
+      "data": {
+        "color": {
+          "primary": "#3674B7"
+        }
+      }
+    }
+  ]
+}
+```
+
+| Variable    | Data Type                                                                 |
+| ----------- | ------------------------------------------------------------------------- |
+| server_name | String: eg. testingwebs23423.riverbase.org                                |
+| theme_link  | String: eg. git@github.com:koompi/riverbase-themes.git                    |
+| env         | Json Object Hashmap                                                       |
+| files       | Json Object Array of filename, path and data of JSON Object without limit |
+
+Response 200
+
+```json
+{
+  "code": 200,
+  "message": "Ok"
+}
+```
+
+| Error | Body                   |
+| ----- | ---------------------- |
+| 400   | actual_error_goes_here |
+| 500   | actual_error_goes_here |
+
+---
+
+</details>

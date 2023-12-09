@@ -16,7 +16,10 @@ pub fn select_all_ports_from_tbl_deploydata() -> Vec<u16> {
     let mut stmt = database
         .prepare("SELECT PortNumber FROM tblDeployData")
         .unwrap();
-    extract_usize(&mut stmt, params![]).iter().map(|each| *each as u16).collect()
+    extract_usize(&mut stmt, params![])
+        .iter()
+        .map(|each| *each as u16)
+        .collect()
 }
 
 pub fn select_process_id_from_tbl_deploydata(server_name: &str) -> Vec<u32> {
@@ -25,7 +28,20 @@ pub fn select_process_id_from_tbl_deploydata(server_name: &str) -> Vec<u32> {
         .prepare("SELECT ProcessId FROM tblDeployData WHERE ServerName=?1")
         .unwrap();
 
-    extract_usize(&mut stmt, params![server_name]).iter().map(|each| *each as u32).collect()
+    extract_usize(&mut stmt, params![server_name])
+        .iter()
+        .map(|each| *each as u32)
+        .collect()
+}
+
+pub fn select_themedata_from_tbl_deploydata(server_name: &str) -> String {
+    let database = open_database();
+    let mut stmt = database
+        .prepare("SELECT ThemePath FROM tblDeployData WHERE ServerName=?1")
+        .unwrap();
+
+    stmt.query_row(params![server_name], |each| each.get::<usize, String>(0))
+        .unwrap()
 }
 
 pub fn delete_from_tbl_deploydata(

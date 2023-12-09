@@ -45,6 +45,20 @@ pub async fn build_js<S: AsRef<str>>(theme_path: S) -> Result<(), (u16, String)>
     }
 }
 
+pub async fn pm2_restart(theme_path: &str, server_name: &str) -> Result<(), (u16, String)> {
+    match Command::new("su")
+        .current_dir(theme_path)
+        .arg("-c")
+        .arg(format!("pm2 restart {}", server_name))
+        .arg(dotenv::var("THEME_LOCAL_USER").unwrap())
+        .output()
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(err) => Err((500, err.to_string())),
+    }
+}
+
 pub async fn pm2_run(theme_path: &str, server_name: &str) -> Result<u32, (u16, String)> {
     match Command::new("su")
         .current_dir(theme_path)
@@ -118,7 +132,13 @@ pub async fn git_clone(url: &str, server_name: &str) -> Result<String, (u16, Str
         Err(e) => Err((500, e.to_string())),
     }?;
 
-    Command::new("chown").arg(dotenv::var("THEME_LOCAL_USER").unwrap()).arg(&theme_path).arg("-R").output().await.unwrap();
+    Command::new("chown")
+        .arg(dotenv::var("THEME_LOCAL_USER").unwrap())
+        .arg(&theme_path)
+        .arg("-R")
+        .output()
+        .await
+        .unwrap();
     Ok(theme_path)
 }
 

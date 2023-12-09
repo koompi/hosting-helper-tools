@@ -189,8 +189,52 @@ pub async fn get_dns(req: HttpRequest) -> Result<HttpResponse, ActixCustomRespon
     )))
 }
 
-#[post("/nginx/hosting")]
-pub async fn post_hosting(args: Json<ThemesData>) -> Result<HttpResponse, ActixCustomResponse> {
+#[post("/hosting/update_existing")]
+pub async fn post_hosting_update_existing(args: Json<ThemesData>) -> Result<HttpResponse, ActixCustomResponse> {
+    let args = args.into_inner();
+    match depl_dbools::query_existence_from_tbl_deploydata(&args.get_server_name()) {
+        true => Ok(()),
+        false => Err(ActixCustomResponse::new_text(
+            400,
+            format!("Server Name '{}' does not exists!", &args.get_server_name()),
+        )),
+    }?;
+
+    let theme_path = depl_dbools::select_themedata_from_tbl_deploydata(&args.get_server_name());
+
+    args.get_files().iter().for_each(|each| {
+        let destination_file = match each.get_path() {
+            Some(custom_path) => format!("{}/{}/{}", theme_path, custom_path, each.get_filename()),
+            None => format!("{}/{}", theme_path, each.get_filename()),
+        };
+        fstools::write_file(
+            destination_file.as_str(),
+            &each.get_data().to_string(),
+            false,
+        )
+        .unwrap()
+    });
+
+    match depl_fstools::install_js_dep(theme_path.clone()).await {
+        Ok(()) => Ok(()),
+        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+    }?;
+
+    match depl_fstools::build_js(theme_path.as_str()).await {
+        Ok(()) => Ok(()),
+        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+    }?;
+
+    match depl_fstools::pm2_restart(theme_path.as_str(), &args.get_server_name()).await {
+        Ok(()) => Ok(()),
+        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+    }?;
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+#[post("/hosting/add")]
+pub async fn post_hosting_add(args: Json<ThemesData>) -> Result<HttpResponse, ActixCustomResponse> {
     let args = args.into_inner();
 
     match depl_dbools::query_existence_from_tbl_deploydata(&args.get_server_name()) {
