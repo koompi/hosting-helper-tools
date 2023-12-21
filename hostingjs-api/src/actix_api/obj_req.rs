@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use serde::Deserialize;
 use serde_json::Value;
+use std::collections::HashMap;
 
 #[derive(Deserialize)]
 pub struct ThemesData {
@@ -12,20 +12,19 @@ pub struct ThemesData {
 
 impl ThemesData {
     pub fn get_env(&self) -> HashMap<String, String> {
-        let obj = &self
-            .env
-            .as_object()
-            .unwrap();
-        obj
-            .iter()
-            .map(|(each_key, each_val)| (each_key.to_string(), each_val.as_str().unwrap().to_string()))
+        let binding = serde_json::Map::new();
+        let obj = &self.env.as_object().unwrap_or(&binding);
+        obj.iter()
+            .map(|(each_key, each_val)| {
+                (each_key.to_string(), each_val.as_str().unwrap().to_string())
+            })
             .collect::<HashMap<String, String>>()
     }
 
-    pub fn get_theme_link(&self) ->  &String {
+    pub fn get_theme_link(&self) -> &String {
         &self.theme_link
     }
-    pub fn get_server_name(&self) ->  &String {
+    pub fn get_server_name(&self) -> &String {
         &self.server_name
     }
     pub fn get_files(&self) -> &Vec<FilesData> {

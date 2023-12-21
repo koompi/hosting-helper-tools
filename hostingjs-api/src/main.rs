@@ -3,6 +3,13 @@ use libdeploy_wrapper::init_migration as deployment_migration;
 
 mod actix_api;
 
+struct EnvData {
+    basepath: String,
+    git_key: String,
+    projroot: String,
+    themepath: String,
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     libdatabase::read_dotenv();
@@ -39,6 +46,18 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(client)
             .app_data(headers)
+            .app_data(EnvData {
+                basepath: std::env::current_exe()
+                    .unwrap()
+                    .parent()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string(),
+                git_key: dotenv::var("THEME_GIT_KEY").unwrap(),
+                projroot: dotenv::var("PROJROOT").unwrap(),
+                themepath: dotenv::var("THEME_PATH").unwrap(),
+            })
             .wrap(cors)
             .wrap(middleware::Logger::default())
             .wrap(actix_web_lab::middleware::from_fn(
