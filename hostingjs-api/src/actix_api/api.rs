@@ -27,6 +27,7 @@ pub async fn post_hosting_update(
         args.get_theme_link().to_string(),
         format!("{}/{}", data.basepath, data.projroot),
         data.basepath.clone(),
+        data.git_key.clone(),
     ));
 
     args.get_files().iter().for_each(|each| {
@@ -47,6 +48,11 @@ pub async fn post_hosting_update(
         .unwrap()
     });
 
+    let project_dir = match project_dir_handler.await.unwrap() {
+        Ok(project_dir) => Ok(project_dir),
+        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+    }?;
+
     fstools::write_file(
         &format!("{}/.env", theme_path_absolute),
         &fstools::read_file(format!("{}/.env", theme_path_absolute))
@@ -57,6 +63,8 @@ pub async fn post_hosting_update(
                 args.get_env().iter().for_each(|(k, v)| {
                     if each.starts_with(k.as_str()) {
                         new_line = format!("{k}={v}");
+                    } else if each.starts_with("ROOTPROJ") {
+                        new_line = format!("ROOTPROJ={project_dir}")
                     } else {
                         new_line = each.to_string();
                     }
@@ -68,6 +76,11 @@ pub async fn post_hosting_update(
         false,
     )
     .unwrap();
+
+    match depl_fstools::stop_compose(&theme_path_absolute).await {
+        Ok(()) => Ok(()),
+        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+    }?;
 
     match depl_fstools::compose_js(&theme_path_absolute).await {
         Ok(()) => Ok(()),
@@ -103,13 +116,10 @@ pub async fn post_hosting_add(
         args.get_theme_link().to_string(),
         format!("{}/{}", data.basepath, data.projroot),
         data.basepath.clone(),
+        data.git_key.clone(),
     ));
 
-    let theme_path = format!(
-        "{}/{}",
-        dotenv::var("THEME_PATH").unwrap(),
-        args.get_server_name()
-    );
+    let theme_path = format!("{}/{}", data.themepath, args.get_server_name());
     let theme_path_absolute = format!("{}/{}", data.basepath, theme_path);
     std::fs::create_dir_all::<&str>(theme_path.as_ref()).unwrap_or_default();
 

@@ -20,6 +20,7 @@ pub async fn git_clone(
     url: String,
     project_dir: String,
     basepath: String,
+    git_key: String,
 ) -> Result<String, (u16, String)> {
     let project_name = url.split("/").last().unwrap().replace(".git", "");
     let project_dir = match Path::new(&project_dir).is_absolute() {
@@ -40,12 +41,7 @@ pub async fn git_clone(
     if !&theme_path_obj.exists() {
         let mut callbacks = RemoteCallbacks::new();
         callbacks.credentials(|_url, username_from_url, _allowed_types| {
-            Cred::ssh_key_from_memory(
-                username_from_url.unwrap(),
-                None,
-                dotenv::var("THEME_GIT_KEY").unwrap().as_ref(),
-                None,
-            )
+            Cred::ssh_key_from_memory(username_from_url.unwrap(), None, git_key.as_str(), None)
         });
 
         let mut fo = FetchOptions::new();
@@ -85,7 +81,9 @@ pub async fn compose_js<S: AsRef<str>>(theme_path: S) -> Result<(), (u16, String
     }
 }
 
-pub async fn restart_compose<S: AsRef<str>>(theme_path: S) -> Result<(), (u16, String)> {
+
+
+pub async fn stop_compose<S: AsRef<str>>(theme_path: S) -> Result<(), (u16, String)> {
     match Command::new("docker")
         .current_dir(theme_path.as_ref())
         .arg("compose")
@@ -95,19 +93,7 @@ pub async fn restart_compose<S: AsRef<str>>(theme_path: S) -> Result<(), (u16, S
         .output()
         .await
     {
-        Ok(_) => match Command::new("docker")
-            .current_dir(theme_path.as_ref())
-            .arg("compose")
-            .arg("-f")
-            .arg(format!("{}/docker-compose.yaml", theme_path.as_ref()))
-            .arg("up")
-            .arg("-d")
-            .output()
-            .await
-        {
-            Ok(_) => Ok(()),
-            Err(err) => Err((500, err.to_string())),
-        },
+        Ok(_) => Ok(()),
         Err(err) => Err((500, err.to_string())),
     }
 }

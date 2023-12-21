@@ -56,7 +56,7 @@ async fn main() -> std::io::Result<()> {
             .service(actix_api::api::put_update_target_site)
             // Hosting
             .service(actix_api::api::post_hosting_add)
-            .service(actix_api::api::post_hosting_update_existing)
+            .service(actix_api::api::post_hosting_update)
         // )
     })
     .bind(&hosting)?;

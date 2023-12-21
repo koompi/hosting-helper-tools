@@ -189,8 +189,8 @@ pub async fn get_dns(req: HttpRequest) -> Result<HttpResponse, ActixCustomRespon
     )))
 }
 
-#[post("/hosting/update_existing")]
-pub async fn post_hosting_update_existing(
+#[post("/hosting/update")]
+pub async fn post_hosting_update(
     args: Json<Value>,
     client: Data<Client>,
 ) -> Result<HttpResponse, ActixCustomResponse> {

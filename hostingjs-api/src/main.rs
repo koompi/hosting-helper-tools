@@ -63,6 +63,8 @@ async fn main() -> std::io::Result<()> {
             .wrap(actix_web_lab::middleware::from_fn(
                 actix_api::middleware::simple_auth,
             ))
+            .service(actix_api::api::post_hosting_add)
+            .service(actix_api::api::post_hosting_update)
     })
     .bind(&hosting)?;
     println!("HostingJS Server Running at {hosting}");
