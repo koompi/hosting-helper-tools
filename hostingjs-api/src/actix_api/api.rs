@@ -53,6 +53,16 @@ pub async fn post_hosting_update(
         Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
     }?;
 
+    let copy_compose_file = tokio::spawn(tokio::fs::copy(
+        format!("{}/{}/docker-compose.yaml", data.basepath, project_dir),
+        format!("{}/docker-compose.yaml", theme_path_absolute),
+    ));
+
+    let copy_docker_file = tokio::spawn(tokio::fs::copy(
+        format!("{}/{}/Dockerfile", data.basepath, project_dir),
+        format!("{}/Dockerfile", theme_path_absolute),
+    ));
+
     fstools::write_file(
         &format!("{}/.env", theme_path_absolute),
         &fstools::read_file(format!("{}/.env", theme_path_absolute))
@@ -61,10 +71,10 @@ pub async fn post_hosting_update(
             .map(|each| {
                 let mut new_line = String::new();
                 args.get_env().iter().for_each(|(k, v)| {
-                    if each.starts_with(k.as_str()) {
+                    if each.starts_with("ROOTPROJ") {
+                        new_line = format!("ROOTPROJ={}", project_dir);
+                    } else if each.starts_with(k.as_str()) {
                         new_line = format!("{k}={v}");
-                    } else if each.starts_with("ROOTPROJ") {
-                        new_line = format!("ROOTPROJ={project_dir}")
                     } else {
                         new_line = each.to_string();
                     }
@@ -76,6 +86,16 @@ pub async fn post_hosting_update(
         false,
     )
     .unwrap();
+
+    match copy_compose_file.await.unwrap() {
+        Ok(_) => Ok(()),
+        Err(err) => Err(ActixCustomResponse::new_text(500, err.to_string())),
+    }?;
+
+    match copy_docker_file.await.unwrap() {
+        Ok(_) => Ok(()),
+        Err(err) => Err(ActixCustomResponse::new_text(500, err.to_string())),
+    }?;
 
     match depl_fstools::stop_compose(&theme_path_absolute).await {
         Ok(()) => Ok(()),
@@ -155,6 +175,16 @@ pub async fn post_hosting_add(
         Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
     }?;
 
+    let copy_compose_file = tokio::spawn(tokio::fs::copy(
+        format!("{}/{}/docker-compose.yaml", data.basepath, project_dir),
+        format!("{}/docker-compose.yaml", theme_path_absolute),
+    ));
+
+    let copy_docker_file = tokio::spawn(tokio::fs::copy(
+        format!("{}/{}/Dockerfile", data.basepath, project_dir),
+        format!("{}/Dockerfile", theme_path_absolute),
+    ));
+
     env_map.insert(String::from("ROOTPROJ"), project_dir);
 
     let available_port = available_port_handle.await.unwrap();
@@ -167,6 +197,16 @@ pub async fn post_hosting_add(
         .join("\n");
 
     fstools::write_file(&format!("{}/.env", theme_path_absolute), &env_data, false).unwrap();
+
+    match copy_compose_file.await.unwrap() {
+        Ok(_) => Ok(()),
+        Err(err) => Err(ActixCustomResponse::new_text(500, err.to_string())),
+    }?;
+
+    match copy_docker_file.await.unwrap() {
+        Ok(_) => Ok(()),
+        Err(err) => Err(ActixCustomResponse::new_text(500, err.to_string())),
+    }?;
 
     match depl_fstools::compose_js(&theme_path_absolute).await {
         Ok(()) => Ok(()),
