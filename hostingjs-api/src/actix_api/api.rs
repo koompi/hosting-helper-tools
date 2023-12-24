@@ -134,25 +134,27 @@ pub async fn post_hosting_add(
 
     let project_dir_handler = tokio::spawn(depl_fstools::git_clone(
         args.get_theme_link().to_string(),
-        format!("{}/{}", data.basepath, data.projroot),
+        data.projroot.clone(),
         data.basepath.clone(),
         data.git_key.clone(),
     ));
 
     let theme_path = format!("{}/{}", data.themepath, args.get_server_name());
     let theme_path_absolute = format!("{}/{}", data.basepath, theme_path);
-    std::fs::create_dir_all::<&str>(theme_path.as_ref()).unwrap_or_default();
+    std::fs::create_dir_all::<&str>(theme_path_absolute.as_ref()).unwrap_or_default();
+
+    println!("{}", theme_path_absolute);
 
     args.get_files().iter().for_each(|each| {
         let destination_file = match each.get_path() {
-            Some(custom_path) => format!(
-                "{}/{}/{}",
-                theme_path_absolute,
-                custom_path,
-                each.get_filename()
-            ),
+            Some(custom_path) => {
+                let custom_absolute_path = format!("{}/{}", theme_path_absolute, custom_path);
+                std::fs::create_dir_all::<&str>(custom_absolute_path.as_ref()).unwrap_or_default();
+                format!("{}/{}", custom_absolute_path, each.get_filename())
+            }
             None => format!("{}/{}", theme_path_absolute, each.get_filename()),
         };
+        std::fs::create_dir_all::<&str>(theme_path_absolute.as_ref()).unwrap_or_default();
         fstools::write_file(
             destination_file.as_str(),
             &each.get_data().to_string(),

@@ -14,11 +14,9 @@ async fn main() -> std::io::Result<()> {
     let hosting = format!("{hosting_addr}:{hosting_port}");
 
     let clfl_mig = tokio::spawn(cloudflare_migration(false));
-    let depl_mig = tokio::spawn(deployment_migration(false));
     // cloudflare_migration(false)
     nginx_migration(false).unwrap();
     clfl_mig.await.unwrap().unwrap();
-    depl_mig.await.unwrap().unwrap();
 
     let server = HttpServer::new(move || {
         let client = actix_web::web::Data::new(libcloudflare_wrapper::get_client());

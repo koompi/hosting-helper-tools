@@ -46,7 +46,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(client)
             .app_data(headers)
-            .app_data(EnvData {
+            .app_data(actix_web::web::Data::new(EnvData {
                 basepath: std::env::current_exe()
                     .unwrap()
                     .parent()
@@ -57,7 +57,7 @@ async fn main() -> std::io::Result<()> {
                 git_key: dotenv::var("THEME_GIT_KEY").unwrap(),
                 projroot: dotenv::var("PROJROOT").unwrap(),
                 themepath: dotenv::var("THEME_PATH").unwrap(),
-            })
+            }))
             .wrap(cors)
             .wrap(middleware::Logger::default())
             .wrap(actix_web_lab::middleware::from_fn(
