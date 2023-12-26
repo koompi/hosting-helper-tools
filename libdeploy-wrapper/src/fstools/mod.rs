@@ -42,12 +42,20 @@ pub async fn git_clone(
 
         match builder.clone(&url, theme_path_obj) {
             Ok(repo) => {
-                return Ok(repo
+                let repo_path = repo
                     .path()
                     .to_str()
                     .unwrap()
                     .replace(format!("{basepath}/").as_str(), "")
-                    .replace("/.git", ""))
+                    .replace("/.git", "");
+
+                let repo_path = match repo_path.strip_suffix("/") {
+                    Some(s) => s,
+                    None => &repo_path,
+                }
+                .to_string();
+
+                return Ok(repo_path);
             }
             Err(e) => Err((500, e.to_string())),
         }?;

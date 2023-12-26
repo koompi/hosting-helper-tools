@@ -25,7 +25,7 @@ pub async fn post_hosting_update(
 
     let project_dir_handler = tokio::spawn(depl_fstools::git_clone(
         args.get_theme_link().to_string(),
-        format!("{}/{}", data.basepath, data.projroot),
+        data.projroot.clone(),
         data.basepath.clone(),
         data.git_key.clone(),
     ));
@@ -112,7 +112,10 @@ pub async fn post_hosting_update(
         Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
     }?;
 
-    Ok(HttpResponse::Ok().finish())
+    Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(
+        200,
+        String::from("Updated"),
+    )))
 }
 
 #[post("/hosting/add")]
