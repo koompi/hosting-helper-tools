@@ -2,7 +2,7 @@
 **/.env
 **/*.db
 **/.migrated
-/bin
+/bin/*
 !/bin/nginx-api
 !/bin/nginx-cli
 !/bin/hostingjs-api
