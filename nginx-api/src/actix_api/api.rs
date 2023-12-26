@@ -189,36 +189,42 @@ pub async fn get_dns(req: HttpRequest) -> Result<HttpResponse, ActixCustomRespon
     )))
 }
 
-#[post("/hosting/update")]
-pub async fn post_hosting_update(
+#[post("/hosting/{tail:.*}")]
+pub async fn post_hosting(
+    req: HttpRequest,
     args: Json<Value>,
     client: Data<Client>,
 ) -> Result<HttpResponse, ActixCustomResponse> {
-    match client
-        .post(dotenv::var("THEME_URL").unwrap() + "/hosting/update_existing")
-        .body(args.into_inner().to_string())
-        .send()
-        .await
-    {
-        Ok(data) => Ok(data),
-        Err(err) => Err(ActixCustomResponse::new_text(400, err.to_string())),
-    }?;
-    Ok(HttpResponse::Ok().finish())
-}
+    let url = format!("{}{}", dotenv::var("DEPLOY_URL").unwrap(), req.path());
+    let url = match req.query_string().is_empty() {
+        true => url,
+        false => format!("{}?{}", url, req.query_string()),
+    };
+    let headers = libcloudflare_wrapper::HeaderMap::from_iter(
+        req.headers()
+            .iter()
+            .map(|(k, v)| (k.to_owned(), v.to_owned()))
+            .collect::<Vec<(_, _)>>(),
+    );
 
-#[post("/hosting/add")]
-pub async fn post_hosting_add(
-    args: Json<Value>,
-    client: Data<Client>,
-) -> Result<HttpResponse, ActixCustomResponse> {
     match client
-        .post(dotenv::var("THEME_URL").unwrap() + "/hosting/add")
-        .body(args.into_inner().to_string())
+        .request(req.method().clone(), url)
+        .headers(headers)
+        .body(args.to_string())
         .send()
         .await
     {
-        Ok(data) => Ok(data),
-        Err(err) => Err(ActixCustomResponse::new_text(400, err.to_string())),
+        Ok(data) => match data.status().is_success() {
+            true => Ok(serde_json::from_str(data.text().await.unwrap().as_ref()).unwrap()),
+            false => match data.error_for_status() {
+                Err(err) => Err(ActixCustomResponse::new_text(
+                    err.status().unwrap_or_default().as_u16(),
+                    err.to_string(),
+                )),
+                Ok(res) => Ok(serde_json::from_str(res.text().await.unwrap().as_ref()).unwrap()),
+            },
+        },
+        Err(err) => Err(ActixCustomResponse::new_text(412, err.to_string())),
     }?;
     Ok(HttpResponse::Ok().finish())
 }

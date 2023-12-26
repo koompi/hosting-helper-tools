@@ -5,4 +5,5 @@
 /bin
 !/bin/nginx-api
 !/bin/nginx-cli
+!/bin/hostingjs-api
 !/bin/sample.env

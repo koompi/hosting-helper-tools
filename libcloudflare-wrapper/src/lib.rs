@@ -16,8 +16,12 @@ pub fn get_client() -> Client {
     ObjResponse::get_client()
 }
 
-pub fn get_headers() -> HeaderMap {
-    ObjResponse::get_headers()
+pub fn get_headers_cloudflare() -> HeaderMap {
+    ObjResponse::get_headers_cloudflare()
+}
+
+pub fn get_headers_default() -> HeaderMap {
+    ObjResponse::get_headers_default()
 }
 
 pub async fn delete_records(
@@ -31,7 +35,7 @@ pub async fn delete_records(
     };
     let headers = match headers {
         Some(headers) => headers,
-        None => ObjResponse::get_headers(),
+        None => ObjResponse::get_headers_cloudflare(),
     };
     ObjResponse::del_record(&client, &headers, subdomain).await
 }
@@ -107,7 +111,7 @@ pub async fn setup_domain(
     };
     let headers = match headers {
         Some(headers) => headers,
-        None => ObjResponse::get_headers(),
+        None => ObjResponse::get_headers_cloudflare(),
     };
     // let client = ObjResponse::get_client();
     // let headers = ObjResponse::get_headers();

@@ -18,7 +18,7 @@ pub(crate) async fn db_migration(force: bool) -> Result<(), (u16, String)> {
     ) {
         let response = ObjResponse::get_zone(
             &ObjResponse::get_client(),
-            &ObjResponse::get_headers(),
+            &&ObjResponse::get_headers_cloudflare(),
             None,
             false,
         )

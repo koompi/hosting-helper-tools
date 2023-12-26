@@ -20,7 +20,7 @@ async fn main() -> std::io::Result<()> {
 
     let server = HttpServer::new(move || {
         let client = actix_web::web::Data::new(libcloudflare_wrapper::get_client());
-        let headers = actix_web::web::Data::new(libcloudflare_wrapper::get_headers());
+        let headers = actix_web::web::Data::new(libcloudflare_wrapper::get_headers_cloudflare());
         let cors_allowed_addr = dotenv::var("CORS_ALLOWED_ADDR").unwrap();
         let production = dotenv::var("PRODUCTION").unwrap().parse::<bool>().unwrap();
         let cors = match production {
@@ -53,8 +53,7 @@ async fn main() -> std::io::Result<()> {
             .service(actix_api::api::delete_remove_nginx)
             .service(actix_api::api::put_update_target_site)
             // Hosting
-            .service(actix_api::api::post_hosting_add)
-            .service(actix_api::api::post_hosting_update)
+            .service(actix_api::api::post_hosting)
         // )
     })
     .bind(&hosting)?;

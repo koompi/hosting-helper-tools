@@ -102,7 +102,7 @@ impl NginxObj {
         };
         let headers = match headers {
             Some(headers) => headers,
-            None => libcloudflare_wrapper::get_headers(),
+            None => libcloudflare_wrapper::get_headers_cloudflare(),
         };
 
         if switch {

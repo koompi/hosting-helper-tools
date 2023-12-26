@@ -2,6 +2,7 @@ use super::{obj_req::ThemesData, obj_response::ActixCustomResponse, HttpResponse
 use actix_web::{
     post,
     web::{Data, Json},
+    HttpRequest, delete,
 };
 use libdeploy_wrapper::{dbtools as depl_dbools, fstools as depl_fstools};
 use libnginx_wrapper::fstools;
@@ -112,10 +113,7 @@ pub async fn post_hosting_update(
         Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
     }?;
 
-    Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(
-        200,
-        String::from("Updated"),
-    )))
+    Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(200, String::from("Updated"))))
 }
 
 #[post("/hosting/add")]
@@ -145,8 +143,6 @@ pub async fn post_hosting_add(
     let theme_path = format!("{}/{}", data.themepath, args.get_server_name());
     let theme_path_absolute = format!("{}/{}", data.basepath, theme_path);
     std::fs::create_dir_all::<&str>(theme_path_absolute.as_ref()).unwrap_or_default();
-
-    println!("{}", theme_path_absolute);
 
     args.get_files().iter().for_each(|each| {
         let destination_file = match each.get_path() {
@@ -233,4 +229,40 @@ pub async fn post_hosting_add(
         200,
         format!("{}", available_port),
     )))
+}
+
+#[delete("/hosting/delete/{server_name}")]
+pub async fn delete_hosting(
+    req: HttpRequest,
+) -> Result<HttpResponse, ActixCustomResponse> {
+    let server_name = match req.match_info().get("server_name") {
+        Some(data) => Ok(data),
+        None => Err(ActixCustomResponse::new_text(
+            400,
+            String::from("Missing Server Name"),
+        )),
+    }?;
+    match depl_dbools::query_existence_from_tbl_deploydata(server_name) {
+        true => Ok(()),
+        false => Err(ActixCustomResponse::new_text(
+            400,
+            format!("Server Name '{}' does not exists!", server_name),
+        )),
+    }?;
+
+    let theme_path_absolute = depl_dbools::select_themedata_from_tbl_deploydata(server_name);
+
+    match depl_fstools::stop_compose(&theme_path_absolute).await {
+        Ok(()) => Ok(()),
+        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+    }?;
+
+    tokio::fs::remove_dir_all(theme_path_absolute).await.unwrap_or(());
+
+    match depl_dbools::delete_from_tbl_deploydata(server_name) {
+        Ok(()) => Ok(()),
+        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+    }?;
+
+    Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(200, String::from("Ok"))))
 }

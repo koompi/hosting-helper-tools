@@ -15,19 +15,13 @@ async fn main() -> std::io::Result<()> {
     libdatabase::read_dotenv();
 
     let hosting_addr = dotenv::var("HOSTING_ADDR").unwrap();
-    let hosting_port = dotenv::var("HOSTING_PORT")
-        .unwrap()
-        .as_str()
-        .parse::<u16>()
-        .unwrap()
-        + 1;
+    let hosting_port = dotenv::var("HOSTINGJS_PORT").unwrap();
     let hosting = format!("{hosting_addr}:{hosting_port}");
     let depl_mig = tokio::spawn(deployment_migration(false));
     depl_mig.await.unwrap().unwrap();
 
     let server = HttpServer::new(move || {
         let client = actix_web::web::Data::new(libcloudflare_wrapper::get_client());
-        let headers = actix_web::web::Data::new(libcloudflare_wrapper::get_headers());
         let cors_allowed_addr = dotenv::var("CORS_ALLOWED_ADDR").unwrap();
         let production = dotenv::var("PRODUCTION").unwrap().parse::<bool>().unwrap();
         let cors = match production {
@@ -45,7 +39,6 @@ async fn main() -> std::io::Result<()> {
         };
         App::new()
             .app_data(client)
-            .app_data(headers)
             .app_data(actix_web::web::Data::new(EnvData {
                 basepath: std::env::current_exe()
                     .unwrap()
@@ -65,6 +58,7 @@ async fn main() -> std::io::Result<()> {
             ))
             .service(actix_api::api::post_hosting_add)
             .service(actix_api::api::post_hosting_update)
+            .service(actix_api::api::delete_hosting)
     })
     .bind(&hosting)?;
     println!("HostingJS Server Running at {hosting}");

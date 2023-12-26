@@ -354,7 +354,7 @@ Response 200
 </details>
 
 <details close="close">
-<summary><b>POST</b> /hosting/update_existing</summary>
+<summary><b>POST</b> /hosting/update</summary>
 
 ---
 
@@ -392,6 +392,43 @@ Body
 | theme_link  | String: eg. git@github.com:koompi/riverbase-themes.git                    |
 | env         | Json Object Hashmap                                                       |
 | files       | Json Object Array of filename, path and data of JSON Object without limit |
+
+Response 200
+
+```json
+{
+  "code": 200,
+  "message": "Ok"
+}
+```
+
+| Error | Body                   |
+| ----- | ---------------------- |
+| 400   | actual_error_goes_here |
+| 500   | actual_error_goes_here |
+
+---
+
+</details>
+
+<details close="close">
+<summary><b>DELETE</b> /hosting/delete/{server_name}</summary>
+
+---
+
+| Header      | Data Type              |
+| ----------- | ---------------------- |
+| server_name | String; eg: koompi.com |
+
+Body
+
+```json
+
+```
+
+| Variable | Data Type |
+| -------- | --------- |
+| None     | None      |
 
 Response 200
 
