@@ -10,7 +10,6 @@ use actix_web::{
     Error, HttpRequest,
 };
 
-use libcloudflare_wrapper::Client;
 use libnginx_wrapper::{
     dbtools::crud::{
         select_all_by_feature_from_tbl_nginxconf, select_all_from_tbl_nginxconf,
@@ -132,7 +131,7 @@ pub async fn post_force_migration() -> Result<HttpResponse, Error> {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;
-    match deployment_migration(false).await {
+    match deployment_migration().await {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;
@@ -193,38 +192,88 @@ pub async fn get_dns(req: HttpRequest) -> Result<HttpResponse, ActixCustomRespon
 pub async fn post_hosting(
     req: HttpRequest,
     args: Json<Value>,
-    client: Data<Client>,
+    client: Data<awc::Client>,
 ) -> Result<HttpResponse, ActixCustomResponse> {
     let url = format!("{}{}", dotenv::var("DEPLOY_URL").unwrap(), req.path());
     let url = match req.query_string().is_empty() {
         true => url,
         false => format!("{}?{}", url, req.query_string()),
     };
-    let headers = libcloudflare_wrapper::HeaderMap::from_iter(
-        req.headers()
-            .iter()
-            .map(|(k, v)| (k.to_owned(), v.to_owned()))
-            .collect::<Vec<(_, _)>>(),
-    );
+    let res = match client
+        .request_from(url, req.head())
+        .timeout(tokio::time::Duration::from_secs(180))
+        .send_json(&args)
+        .await
+    {
+        Ok(mut data) => Ok(data.json::<Value>().await.unwrap()),
+        Err(err) => Err(ActixCustomResponse::new_text(400, err.to_string())),
+    }?;
+    Ok(HttpResponse::Ok().json(res))
+}
 
-    match client
-        .request(req.method().clone(), url)
-        .headers(headers)
-        .body(args.to_string())
+#[get("/hosting/{tail:.*}")]
+pub async fn get_hosting(
+    req: HttpRequest,
+    client: Data<awc::Client>,
+) -> Result<HttpResponse, ActixCustomResponse> {
+    let url = format!("{}{}", dotenv::var("DEPLOY_URL").unwrap(), req.path());
+    let url = match req.query_string().is_empty() {
+        true => url,
+        false => format!("{}?{}", url, req.query_string()),
+    };
+    let res = match client
+        .request_from(url, req.head())
+        .timeout(tokio::time::Duration::from_secs(180))
         .send()
         .await
     {
-        Ok(data) => match data.status().is_success() {
-            true => Ok(serde_json::from_str(data.text().await.unwrap().as_ref()).unwrap()),
-            false => match data.error_for_status() {
-                Err(err) => Err(ActixCustomResponse::new_text(
-                    err.status().unwrap_or_default().as_u16(),
-                    err.to_string(),
-                )),
-                Ok(res) => Ok(serde_json::from_str(res.text().await.unwrap().as_ref()).unwrap()),
-            },
-        },
-        Err(err) => Err(ActixCustomResponse::new_text(412, err.to_string())),
+        Ok(mut data) => Ok(data.json::<Value>().await.unwrap_or_default()),
+        Err(err) => Err(ActixCustomResponse::new_text(400, err.to_string())),
     }?;
-    Ok(HttpResponse::Ok().finish())
+    Ok(HttpResponse::Ok().json(res))
+}
+
+#[put("/hosting/{tail:.*}")]
+pub async fn put_hosting(
+    req: HttpRequest,
+    args: Json<Value>,
+    client: Data<awc::Client>,
+) -> Result<HttpResponse, ActixCustomResponse> {
+    let url = format!("{}{}", dotenv::var("DEPLOY_URL").unwrap(), req.path());
+    let url = match req.query_string().is_empty() {
+        true => url,
+        false => format!("{}?{}", url, req.query_string()),
+    };
+    let res = match client
+        .request_from(url, req.head())
+        .timeout(tokio::time::Duration::from_secs(180))
+        .send_json(&args)
+        .await
+    {
+        Ok(mut data) => Ok(data.json::<Value>().await.unwrap_or_default()),
+        Err(err) => Err(ActixCustomResponse::new_text(400, err.to_string())),
+    }?;
+    Ok(HttpResponse::Ok().json(res))
+}
+
+#[delete("/hosting/{tail:.*}")]
+pub async fn delete_hosting(
+    req: HttpRequest,
+    client: Data<awc::Client>,
+) -> Result<HttpResponse, ActixCustomResponse> {
+    let url = format!("{}{}", dotenv::var("DEPLOY_URL").unwrap(), req.path());
+    let url = match req.query_string().is_empty() {
+        true => url,
+        false => format!("{}?{}", url, req.query_string()),
+    };
+    let res = match client
+        .request_from(url, req.head())
+        .timeout(tokio::time::Duration::from_secs(180))
+        .send()
+        .await
+    {
+        Ok(mut data) => Ok(data.json::<Value>().await.unwrap_or_default()),
+        Err(err) => Err(ActixCustomResponse::new_text(400, err.to_string())),
+    }?;
+    Ok(HttpResponse::Ok().json(res))
 }

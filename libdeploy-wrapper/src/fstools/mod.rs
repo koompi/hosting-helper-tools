@@ -28,6 +28,7 @@ pub async fn git_clone(
     let theme_path_obj = Path::new(&git_path);
 
     if !&theme_path_obj.exists() {
+        tokio::fs::create_dir_all(&git_path).await.unwrap();
         let mut callbacks = RemoteCallbacks::new();
         callbacks.credentials(|_url, username_from_url, _allowed_types| {
             Cred::ssh_key_from_memory(username_from_url.unwrap(), None, git_key.as_str(), None)

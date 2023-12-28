@@ -354,7 +354,7 @@ Response 200
 </details>
 
 <details close="close">
-<summary><b>POST</b> /hosting/update</summary>
+<summary><b>PUT</b> /hosting/update</summary>
 
 ---
 

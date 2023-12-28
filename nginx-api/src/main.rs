@@ -19,7 +19,8 @@ async fn main() -> std::io::Result<()> {
     clfl_mig.await.unwrap().unwrap();
 
     let server = HttpServer::new(move || {
-        let client = actix_web::web::Data::new(libcloudflare_wrapper::get_client());
+        let cloudflare_client = actix_web::web::Data::new(libcloudflare_wrapper::get_client());
+        let awc_client = actix_web::web::Data::new(awc::Client::default());
         let headers = actix_web::web::Data::new(libcloudflare_wrapper::get_headers_cloudflare());
         let cors_allowed_addr = dotenv::var("CORS_ALLOWED_ADDR").unwrap();
         let production = dotenv::var("PRODUCTION").unwrap().parse::<bool>().unwrap();
@@ -37,7 +38,8 @@ async fn main() -> std::io::Result<()> {
             false => actix_cors::Cors::permissive(),
         };
         App::new()
-            .app_data(client)
+            .app_data(cloudflare_client)
+            .app_data(awc_client)
             .app_data(headers)
             .wrap(cors)
             .wrap(middleware::Logger::default())
@@ -53,7 +55,10 @@ async fn main() -> std::io::Result<()> {
             .service(actix_api::api::delete_remove_nginx)
             .service(actix_api::api::put_update_target_site)
             // Hosting
+            .service(actix_api::api::get_hosting)
             .service(actix_api::api::post_hosting)
+            .service(actix_api::api::delete_hosting)
+            .service(actix_api::api::put_hosting)
         // )
     })
     .bind(&hosting)?;

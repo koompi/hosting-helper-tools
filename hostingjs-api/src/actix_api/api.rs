@@ -1,28 +1,35 @@
+use crate::EnvData;
+
 use super::{obj_req::ThemesData, obj_response::ActixCustomResponse, HttpResponse};
 use actix_web::{
-    post,
+    delete, post, put,
     web::{Data, Json},
-    HttpRequest, delete,
+    HttpRequest,
 };
-use libdeploy_wrapper::{dbtools as depl_dbools, fstools as depl_fstools};
+use libdeploy_wrapper::fstools as depl_fstools;
 use libnginx_wrapper::fstools;
 
-#[post("/hosting/update")]
-pub async fn post_hosting_update(
+#[put("/hosting/update")]
+pub async fn put_hosting_update(
     args: Json<ThemesData>,
     data: Data<crate::EnvData>,
 ) -> Result<HttpResponse, ActixCustomResponse> {
     let args = args.into_inner();
-    match depl_dbools::query_existence_from_tbl_deploydata(&args.get_server_name()) {
-        true => Ok(()),
+
+    let theme_path = format!(
+        "{}/{}/{}",
+        data.basepath,
+        data.themepath,
+        args.get_server_name()
+    );
+
+    let theme_path_absolute = match std::path::Path::new(&theme_path).exists() {
+        true => Ok(theme_path),
         false => Err(ActixCustomResponse::new_text(
             400,
             format!("Server Name '{}' does not exists!", &args.get_server_name()),
         )),
     }?;
-
-    let theme_path_absolute =
-        depl_dbools::select_themedata_from_tbl_deploydata(&args.get_server_name());
 
     let project_dir_handler = tokio::spawn(depl_fstools::git_clone(
         args.get_theme_link().to_string(),
@@ -123,13 +130,22 @@ pub async fn post_hosting_add(
 ) -> Result<HttpResponse, ActixCustomResponse> {
     let args = args.into_inner();
 
-    match depl_dbools::query_existence_from_tbl_deploydata(&args.get_server_name()) {
+    let theme_path = format!(
+        "{}/{}/{}",
+        data.basepath,
+        data.themepath,
+        args.get_server_name()
+    );
+
+    match std::path::Path::new(&theme_path).exists() {
         true => Err(ActixCustomResponse::new_text(
             400,
             format!("Server Name '{}' already existed!", &args.get_server_name()),
         )),
         false => Ok(()),
     }?;
+
+    println!("Past Path");
 
     let available_port_handle = tokio::spawn(depl_fstools::scan_available_port());
 
@@ -139,6 +155,8 @@ pub async fn post_hosting_add(
         data.basepath.clone(),
         data.git_key.clone(),
     ));
+
+    println!("Cloning");
 
     let theme_path = format!("{}/{}", data.themepath, args.get_server_name());
     let theme_path_absolute = format!("{}/{}", data.basepath, theme_path);
@@ -219,12 +237,6 @@ pub async fn post_hosting_add(
         Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
     }?;
 
-    depl_dbools::insert_tbl_deploydata(
-        available_port,
-        &theme_path_absolute,
-        args.get_server_name(),
-    );
-
     Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(
         200,
         format!("{}", available_port),
@@ -234,6 +246,7 @@ pub async fn post_hosting_add(
 #[delete("/hosting/delete/{server_name}")]
 pub async fn delete_hosting(
     req: HttpRequest,
+    data: Data<EnvData>,
 ) -> Result<HttpResponse, ActixCustomResponse> {
     let server_name = match req.match_info().get("server_name") {
         Some(data) => Ok(data),
@@ -242,27 +255,24 @@ pub async fn delete_hosting(
             String::from("Missing Server Name"),
         )),
     }?;
-    match depl_dbools::query_existence_from_tbl_deploydata(server_name) {
-        true => Ok(()),
+    let theme_path = format!("{}/{}/{}", data.basepath, data.themepath, server_name);
+
+    let theme_path_absolute = match std::path::Path::new(&theme_path).exists() {
+        true => Ok(theme_path),
         false => Err(ActixCustomResponse::new_text(
             400,
             format!("Server Name '{}' does not exists!", server_name),
         )),
     }?;
 
-    let theme_path_absolute = depl_dbools::select_themedata_from_tbl_deploydata(server_name);
-
     match depl_fstools::stop_compose(&theme_path_absolute).await {
         Ok(()) => Ok(()),
         Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
     }?;
 
-    tokio::fs::remove_dir_all(theme_path_absolute).await.unwrap_or(());
-
-    match depl_dbools::delete_from_tbl_deploydata(server_name) {
-        Ok(()) => Ok(()),
-        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
-    }?;
+    tokio::fs::remove_dir_all(theme_path_absolute)
+        .await
+        .unwrap_or(());
 
     Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(200, String::from("Ok"))))
 }

@@ -17,11 +17,10 @@ async fn main() -> std::io::Result<()> {
     let hosting_addr = dotenv::var("HOSTING_ADDR").unwrap();
     let hosting_port = dotenv::var("HOSTINGJS_PORT").unwrap();
     let hosting = format!("{hosting_addr}:{hosting_port}");
-    let depl_mig = tokio::spawn(deployment_migration(false));
+    let depl_mig = tokio::spawn(deployment_migration());
     depl_mig.await.unwrap().unwrap();
 
     let server = HttpServer::new(move || {
-        let client = actix_web::web::Data::new(libcloudflare_wrapper::get_client());
         let cors_allowed_addr = dotenv::var("CORS_ALLOWED_ADDR").unwrap();
         let production = dotenv::var("PRODUCTION").unwrap().parse::<bool>().unwrap();
         let cors = match production {
@@ -38,7 +37,6 @@ async fn main() -> std::io::Result<()> {
             false => actix_cors::Cors::permissive(),
         };
         App::new()
-            .app_data(client)
             .app_data(actix_web::web::Data::new(EnvData {
                 basepath: std::env::current_exe()
                     .unwrap()
@@ -57,7 +55,7 @@ async fn main() -> std::io::Result<()> {
                 actix_api::middleware::simple_auth,
             ))
             .service(actix_api::api::post_hosting_add)
-            .service(actix_api::api::post_hosting_update)
+            .service(actix_api::api::put_hosting_update)
             .service(actix_api::api::delete_hosting)
     })
     .bind(&hosting)?;
