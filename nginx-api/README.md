@@ -354,6 +354,46 @@ Response 200
 </details>
 
 <details close="close">
+<summary><b>GET</b> /hosting/get_log/{server_name}</summary>
+
+---
+
+| Header      | Data Type              |
+| ----------- | ---------------------- |
+| server_name | String; eg: koompi.com |
+
+Body
+
+```json
+{
+  "code": 200,
+  "message": "2023-12-30T02:30:57.767792953Z \n2023-12-30T02:30:57.767884086Z > theme-riverbase@ start /app\n2023-12-30T02:30:57.767893335Z > solid-start start --port 3000\n2023-12-30T02:30:57.767900724Z \n2023-12-30T02:30:58.614742807Z  solid-start start \n2023-12-30T02:30:58.616109334Z\n"
+}
+```
+
+| Variable | Data Type |
+| -------- | --------- |
+| None     | None      |
+
+Response 200
+
+```json
+{
+  "code": 200,
+  "message": "Ok"
+}
+```
+
+| Error | Body                   |
+| ----- | ---------------------- |
+| 400   | actual_error_goes_here |
+| 500   | actual_error_goes_here |
+
+---
+
+</details>
+
+<details close="close">
 <summary><b>PUT</b> /hosting/update</summary>
 
 ---
