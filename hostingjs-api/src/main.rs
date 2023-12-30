@@ -55,6 +55,8 @@ async fn main() -> std::io::Result<()> {
                 actix_api::middleware::simple_auth,
             ))
             .service(actix_api::api::post_hosting_add)
+            .service(actix_api::api::put_update_git_pull)
+            .service(actix_api::api::get_hosting_log)
             .service(actix_api::api::put_hosting_update)
             .service(actix_api::api::delete_hosting)
     })

@@ -2,7 +2,7 @@ use crate::EnvData;
 
 use super::{obj_req::ThemesData, obj_response::ActixCustomResponse, HttpResponse};
 use actix_web::{
-    delete, post, put,
+    delete, get, post, put,
     web::{Data, Json},
     HttpRequest,
 };
@@ -61,6 +61,8 @@ pub async fn put_hosting_update(
         Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
     }?;
 
+    let project_name = project_dir.split("/").last().unwrap().to_string();
+
     let copy_compose_file = tokio::spawn(tokio::fs::copy(
         format!("{}/{}/docker-compose.yaml", data.basepath, project_dir),
         format!("{}/docker-compose.yaml", theme_path_absolute),
@@ -81,6 +83,8 @@ pub async fn put_hosting_update(
                 args.get_env().iter().for_each(|(k, v)| {
                     if each.starts_with("ROOTPROJ") {
                         new_line = format!("ROOTPROJ={}", project_dir);
+                    } else if each.starts_with("ROOTPROJNAME") {
+                        new_line = format!("ROOTPROJNAME={}", project_name);
                     } else if each.starts_with(k.as_str()) {
                         new_line = format!("{k}={v}");
                     } else {
@@ -145,8 +149,6 @@ pub async fn post_hosting_add(
         false => Ok(()),
     }?;
 
-    println!("Past Path");
-
     let available_port_handle = tokio::spawn(depl_fstools::scan_available_port());
 
     let project_dir_handler = tokio::spawn(depl_fstools::git_clone(
@@ -155,8 +157,6 @@ pub async fn post_hosting_add(
         data.basepath.clone(),
         data.git_key.clone(),
     ));
-
-    println!("Cloning");
 
     let theme_path = format!("{}/{}", data.themepath, args.get_server_name());
     let theme_path_absolute = format!("{}/{}", data.basepath, theme_path);
@@ -194,6 +194,8 @@ pub async fn post_hosting_add(
         Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
     }?;
 
+    let project_name = project_dir.split("/").last().unwrap().to_string();
+
     let copy_compose_file = tokio::spawn(tokio::fs::copy(
         format!("{}/{}/docker-compose.yaml", data.basepath, project_dir),
         format!("{}/docker-compose.yaml", theme_path_absolute),
@@ -205,6 +207,7 @@ pub async fn post_hosting_add(
     ));
 
     env_map.insert(String::from("ROOTPROJ"), project_dir);
+    env_map.insert(String::from("ROOTPROJNAME"), project_name);
 
     let available_port = available_port_handle.await.unwrap();
     env_map.insert(String::from("PORT_NUMBER"), available_port.to_string());
@@ -275,4 +278,103 @@ pub async fn delete_hosting(
         .unwrap_or(());
 
     Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(200, String::from("Ok"))))
+}
+
+#[get("/hosting/get_log/{server_name}")]
+pub async fn get_hosting_log(
+    req: HttpRequest,
+    data: Data<EnvData>,
+) -> Result<HttpResponse, ActixCustomResponse> {
+    let server_name = match req.match_info().get("server_name") {
+        Some(data) => Ok(data),
+        None => Err(ActixCustomResponse::new_text(
+            400,
+            String::from("Missing Server Name"),
+        )),
+    }?;
+    let theme_path = format!("{}/{}/{}", data.basepath, data.themepath, server_name);
+
+    match std::path::Path::new(&theme_path).exists() {
+        true => Ok(()),
+        false => Err(ActixCustomResponse::new_text(
+            400,
+            format!("Server Name '{}' does not exists!", server_name),
+        )),
+    }?;
+
+    let logs = match depl_fstools::log_compose(server_name).await {
+        Ok(data) => Ok(data),
+        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+    }?;
+
+    Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(200, logs)))
+}
+
+#[put("/hosting/update_git/{git_url}")]
+pub async fn put_update_git_pull(
+    req: HttpRequest,
+    data: Data<EnvData>,
+) -> Result<HttpResponse, ActixCustomResponse> {
+    let url = match req.match_info().get("git_url") {
+        Some(data) => Ok(data),
+        None => Err(ActixCustomResponse::new_text(
+            400,
+            String::from("Missing git_url"),
+        )),
+    }?;
+    let project_name = url.split("/").last().unwrap().replace(".git", "");
+    let project_dir = format!("{}/{}/{}", data.basepath, data.projroot, project_name);
+    depl_fstools::git_pull(&project_dir).await;
+
+    let mut dir = tokio::fs::read_dir(format!("{}/{}", data.basepath, data.themepath))
+        .await
+        .unwrap();
+    while let Some(entry) = dir.next_entry().await.unwrap_or_default() {
+        let path = entry.path();
+        let theme_path_absolute = path.to_str().unwrap();
+        match fstools::read_file(format!("{}/.env", theme_path_absolute))
+            .lines()
+            .any(|each| each == format!("ROOTPROJNAME={}", project_name))
+        {
+            true => {
+                let copy_compose_file = tokio::spawn(tokio::fs::copy(
+                    format!("{}/{}/docker-compose.yaml", data.basepath, project_dir),
+                    format!("{}/docker-compose.yaml", theme_path_absolute),
+                ));
+
+                let copy_docker_file = tokio::spawn(tokio::fs::copy(
+                    format!("{}/{}/Dockerfile", data.basepath, project_dir),
+                    format!("{}/Dockerfile", theme_path_absolute),
+                ));
+
+                match copy_compose_file.await.unwrap() {
+                    Ok(_) => Ok(()),
+                    Err(err) => Err(ActixCustomResponse::new_text(500, err.to_string())),
+                }?;
+
+                match copy_docker_file.await.unwrap() {
+                    Ok(_) => Ok(()),
+                    Err(err) => Err(ActixCustomResponse::new_text(500, err.to_string())),
+                }?;
+
+                match depl_fstools::stop_compose(&theme_path_absolute).await {
+                    Ok(()) => Ok(()),
+                    Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+                }?;
+
+                match depl_fstools::compose_js(&theme_path_absolute).await {
+                    Ok(()) => Ok(()),
+                    Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+                }?;
+
+                match depl_fstools::deploy_js(&theme_path_absolute).await {
+                    Ok(()) => Ok(()),
+                    Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+                }?;
+            }
+            false => continue,
+        };
+    }
+
+    Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(200, String::new())))
 }

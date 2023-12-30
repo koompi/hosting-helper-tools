@@ -24,7 +24,6 @@ impl ObjResponse {
         }?;
         let zone_id = data.get_zone_id();
         // let id = data.get_zone_id();
-        println!("FN: {}", full_domain_name);
         let response = Self::get_records(&client, &headers, zone_id, Some(full_domain_name)).await;
         match response.unwrap() {
             Ok(()) => Ok(()),

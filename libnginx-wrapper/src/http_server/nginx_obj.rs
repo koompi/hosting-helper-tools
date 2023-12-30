@@ -80,10 +80,17 @@ impl NginxObj {
         }?;
         let target_site_str = target_site.to_string();
 
-        Self::new(old_obj.server_name, target_site, old_obj.feature)?
-            .finish(false)
-            .await?;
+        let obj = Self::new_unchecked(old_obj.server_name, target_site, old_obj.feature);
+        let destination_file = obj.write_to_disk()?;
 
+        match obj.make_ssl() {
+            Ok(()) => Ok(()),
+            Err(err) => Err({
+                std::fs::remove_file(&destination_file).unwrap();
+                err
+            }),
+        }?;
+        restart_reload_service();
         update_target_tbl_nginxconf(server_name, &target_site_str);
 
         Ok(())

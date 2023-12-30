@@ -1,4 +1,4 @@
-use git2::{build::RepoBuilder, Cred, FetchOptions, RemoteCallbacks};
+use git2::{build::RepoBuilder, Cred, FetchOptions, RemoteCallbacks, Repository};
 use rand::Rng;
 use std::{
     net::{SocketAddr, TcpListener},
@@ -13,6 +13,24 @@ pub async fn scan_available_port() -> u16 {
             Ok(_) => break random_port,
             Err(_) => continue,
         }
+    }
+}
+
+pub async fn git_pull<S: AsRef<str>>(project_dir: S) {
+    let repo = Repository::open(project_dir.as_ref()).unwrap();
+
+    repo.find_remote("origin").unwrap()
+        .fetch(&["main"], None, None).unwrap();
+
+    let fetch_head = repo.find_reference("FETCH_HEAD").unwrap();
+    let fetch_commit = repo.reference_to_annotated_commit(&fetch_head).unwrap();
+    let analysis = repo.merge_analysis(&[&fetch_commit]).unwrap();
+    if analysis.0.is_fast_forward() {
+        let refname = format!("refs/heads/{}", "main");
+        let mut reference = repo.find_reference(&refname).unwrap();
+        reference.set_target(fetch_commit.id(), "Fast-Forward").unwrap();
+        repo.set_head(&refname).unwrap();
+        repo.checkout_head(Some(git2::build::CheckoutBuilder::default().force())).unwrap();
     }
 }
 
@@ -114,6 +132,22 @@ pub async fn deploy_js<S: AsRef<str>>(theme_path: S) -> Result<(), (u16, String)
     {
         Ok(res) => match res.status.success() {
             true => Ok(()),
+            false => Err((500, String::from_utf8(res.stderr).unwrap())),
+        },
+        Err(err) => Err((500, err.to_string())),
+    }
+}
+
+pub async fn log_compose<S: AsRef<str>>(server_name: S) -> Result<String, (u16, String)> {
+    match tokio::process::Command::new("docker")
+        .arg("logs")
+        .arg("-t")
+        .arg(server_name.as_ref())
+        .output()
+        .await
+    {
+        Ok(res) => match res.status.success() {
+            true => Ok(String::from_utf8(res.stdout).unwrap()),
             false => Err((500, String::from_utf8(res.stderr).unwrap())),
         },
         Err(err) => Err((500, err.to_string())),
