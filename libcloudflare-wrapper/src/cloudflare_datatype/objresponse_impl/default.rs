@@ -20,7 +20,10 @@ impl ObjResponse {
                 String::new()
             }
         };
-        headers.insert("Authorization", bearer.parse().unwrap());
+        headers.insert(
+            "Authorization",
+            format!("Bearer {}", bearer).parse().unwrap(),
+        );
         headers
     }
 
