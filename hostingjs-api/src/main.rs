@@ -3,6 +3,7 @@ use libdeploy_wrapper::init_migration as deployment_migration;
 
 mod actix_api;
 
+#[derive(Clone)]
 struct EnvData {
     basepath: String,
     git_key: String,
@@ -57,6 +58,7 @@ async fn main() -> std::io::Result<()> {
             .service(actix_api::api::post_hosting_add)
             .service(actix_api::api::put_update_git_pull)
             .service(actix_api::api::get_hosting_log)
+            .service(actix_api::api::get_server_port)
             .service(actix_api::api::put_hosting_update)
             .service(actix_api::api::delete_hosting)
     })
