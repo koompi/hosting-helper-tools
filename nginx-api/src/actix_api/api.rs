@@ -87,6 +87,26 @@ pub async fn post_add_nginx(
     Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(200, String::from("Ok"))))
 }
 
+#[post("/nginx/add/custom")]
+pub async fn post_add_custom_nginx(
+    args: Json<NginxObj>,
+    qstring: Query<AddNginxQueryString>,
+) -> Result<HttpResponse, ActixCustomResponse> {
+    let args = args.into_inner();
+
+    match args.verify() {
+        Ok(()) => Ok(()),
+        Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
+    }?;
+
+    match args.finish(*qstring.get_ssl_bool()).await {
+        Ok(()) => Ok(()),
+        Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
+    }?;
+
+    Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(200, String::from("Ok"))))
+}
+
 #[put("/nginx/update/{server_name}")]
 pub async fn put_update_target_site(
     req: HttpRequest,
