@@ -212,6 +212,16 @@ pub async fn default_action(args: ThemesData, data: crate::EnvData, is_add: bool
         }
 
         if can_continue {
+
+            write_log(
+                "Starting Building Process",
+                theme_path_absolute.as_str(),
+                Some(log_file.as_str()),
+                error,
+                error,
+            )
+            .unwrap();
+
             let (step_message, error) = match depl_fstools::compose_js(&theme_path_absolute).await {
                 Ok(_) => (format!("Installed and Built the Website"), false),
                 Err((code, message)) => {

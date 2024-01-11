@@ -41,7 +41,7 @@ pub fn read_log<S: AsRef<str>>(theme_path_absolute: S) -> (bool, bool, String) /
                         finished,
                         error,
                         data.lines()
-                            .filter(|line| line != &"===" && line != &"Ok" || line != &"Err")
+                            .filter(|line| !(line == &"===" || line == &"Ok" || line == &"Err"))
                             .collect::<Vec<&str>>()
                             .join("\n"),
                     )
