@@ -54,7 +54,6 @@ async fn main() -> std::io::Result<()> {
             .service(actix_api::api::post_force_migration)
             .service(actix_api::api::delete_remove_nginx)
             .service(actix_api::api::put_update_target_site)
-            .service(actix_api::api::post_add_custom_nginx)
             // Hosting
             .service(actix_api::api::get_hosting)
             .service(actix_api::api::post_hosting)
