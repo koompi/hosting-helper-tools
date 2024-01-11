@@ -25,10 +25,12 @@ pub async fn put_hosting_update(
 
     let _ = match std::path::Path::new(&theme_path).exists() {
         true => Ok(theme_path),
-        false => Err(ActixCustomResponse::new_text(
-            400,
-            format!("Server Name '{}' does not exists!", &args.get_server_name()),
-        )),
+        false => {
+            return Err(ActixCustomResponse::new_text(
+                400,
+                format!("Server Name '{}' does not exists!", &args.get_server_name()),
+            ))
+        }
     }?;
 
     tokio::spawn(super::actions::hosting::default_action(
@@ -55,10 +57,12 @@ pub async fn post_hosting_add(
     );
 
     match std::path::Path::new(&theme_path).exists() {
-        true => Err(ActixCustomResponse::new_text(
-            400,
-            format!("Server Name '{}' already existed!", &args.get_server_name()),
-        )),
+        true => {
+            return Err(ActixCustomResponse::new_text(
+                400,
+                format!("Server Name '{}' already existed!", &args.get_server_name()),
+            ))
+        }
         false => Ok(()),
     }?;
 
@@ -80,21 +84,26 @@ pub async fn get_server_port(
 ) -> Result<HttpResponse, ActixCustomResponse> {
     let server_name = match req.match_info().get("server_name") {
         Some(data) => Ok(data),
-        None => Err(ActixCustomResponse::new_text(
-            400,
-            String::from("Missing Server Name"),
-        )),
+        None => {
+            return Err(ActixCustomResponse::new_text(
+                400,
+                String::from("Missing Server Name"),
+            ))
+        }
     }?;
+
     let theme_path = format!("{}/{}/{}", data.basepath, data.themepath, server_name);
 
     let theme_path = match std::path::Path::new(&theme_path).exists() {
         true => Ok(theme_path),
-        false => Err(ActixCustomResponse::new_text(
-            400,
-            format!("Server Name '{}' does not exists!", server_name),
-        )),
+        false => {
+            return Err(ActixCustomResponse::new_text(
+                400,
+                format!("Server Name '{}' does not exists!", server_name),
+            ));
+        }
     }?;
-    
+
     let port: u16 = fstools::read_file(format!("{}/.env", theme_path))
         .lines()
         .filter_map(|each| each.contains("PORT_NUMBER").then(|| each))
@@ -116,24 +125,29 @@ pub async fn delete_hosting(
 ) -> Result<HttpResponse, ActixCustomResponse> {
     let server_name = match req.match_info().get("server_name") {
         Some(data) => Ok(data),
-        None => Err(ActixCustomResponse::new_text(
-            400,
-            String::from("Missing Server Name"),
-        )),
+        None => {
+            return Err(ActixCustomResponse::new_text(
+                400,
+                String::from("Missing Server Name"),
+            ))
+        }
     }?;
+
     let theme_path = format!("{}/{}/{}", data.basepath, data.themepath, server_name);
 
     let theme_path_absolute = match std::path::Path::new(&theme_path).exists() {
         true => Ok(theme_path),
-        false => Err(ActixCustomResponse::new_text(
-            400,
-            format!("Server Name '{}' does not exists!", server_name),
-        )),
+        false => {
+            return Err(ActixCustomResponse::new_text(
+                400,
+                format!("Server Name '{}' does not exists!", server_name),
+            ))
+        }
     }?;
 
     match depl_fstools::stop_compose(&theme_path_absolute).await {
         Ok(()) => Ok(()),
-        Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+        Err((code, message)) => return Err(ActixCustomResponse::new_text(code, message)),
     }?;
 
     tokio::fs::remove_dir_all(theme_path_absolute)
@@ -150,19 +164,24 @@ pub async fn get_hosting_log(
 ) -> Result<HttpResponse, ActixCustomResponse> {
     let server_name = match req.match_info().get("server_name") {
         Some(data) => Ok(data),
-        None => Err(ActixCustomResponse::new_text(
-            400,
-            String::from("Missing Server Name"),
-        )),
+        None => {
+            return Err(ActixCustomResponse::new_text(
+                400,
+                String::from("Missing Server Name"),
+            ))
+        }
     }?;
+
     let theme_path = format!("{}/{}/{}", data.basepath, data.themepath, server_name);
 
     match std::path::Path::new(&theme_path).exists() {
         true => Ok(()),
-        false => Err(ActixCustomResponse::new_text(
-            400,
-            format!("Server Name '{}' does not exists!", server_name),
-        )),
+        false => {
+            return Err(ActixCustomResponse::new_text(
+                400,
+                format!("Server Name '{}' does not exists!", server_name),
+            ))
+        }
     }?;
 
     let (finished, error, logs) = super::actions::log_action::read_log(theme_path);
@@ -171,14 +190,16 @@ pub async fn get_hosting_log(
             false => {
                 let docker_logs = match depl_fstools::log_compose(server_name).await {
                     Ok(data) => Ok(data),
-                    Err((code, message)) => Err(ActixCustomResponse::new_text(code, message)),
+                    Err((code, message)) => {
+                        return Err(ActixCustomResponse::new_text(code, message))
+                    }
                 }?;
                 Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(
                     200,
                     format!("{}/n{}", logs, docker_logs),
                 )))
             }
-            true => Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(500, logs))),
+            true => return Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(500, logs))),
         },
         false => Ok(HttpResponse::Ok().json(ActixCustomResponse::new_text(202, logs))),
     }
@@ -191,10 +212,12 @@ pub async fn put_update_git_pull(
 ) -> Result<HttpResponse, ActixCustomResponse> {
     let url = match req.match_info().get("git_url") {
         Some(data) => Ok(data),
-        None => Err(ActixCustomResponse::new_text(
-            400,
-            String::from("Missing git_url"),
-        )),
+        None => {
+            return Err(ActixCustomResponse::new_text(
+                400,
+                String::from("Missing git_url"),
+            ))
+        }
     }?;
 
     tokio::spawn(super::actions::git_update::default_action(
@@ -212,10 +235,12 @@ pub async fn get_log_update_git_pull(
 ) -> Result<HttpResponse, ActixCustomResponse> {
     let url = match req.match_info().get("git_url") {
         Some(data) => Ok(data),
-        None => Err(ActixCustomResponse::new_text(
-            400,
-            String::from("Missing git_url"),
-        )),
+        None => {
+            return Err(ActixCustomResponse::new_text(
+                400,
+                String::from("Missing git_url"),
+            ));
+        }
     }?;
 
     tokio::spawn(super::actions::git_update::default_action(
