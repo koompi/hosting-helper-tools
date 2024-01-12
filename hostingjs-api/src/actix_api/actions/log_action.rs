@@ -3,7 +3,7 @@ use super::fstools;
 fn find_latest_log<S: AsRef<str>>(theme_path_absolute: S, write: bool) -> String {
     let mut i = 0;
 
-    let a = loop {
+    loop {
         let current_file = format!("{}/install.log-{}", theme_path_absolute.as_ref(), i);
         let log_path = std::path::Path::new(&current_file);
         match log_path.exists() {
@@ -16,10 +16,7 @@ fn find_latest_log<S: AsRef<str>>(theme_path_absolute: S, write: bool) -> String
                 },
             },
         }
-    };
-
-    println!("theme: {} -- Path: {}", theme_path_absolute.as_ref(), a);
-    a
+    }
 }
 
 pub fn read_log<S: AsRef<str>>(theme_path_absolute: S) -> (bool, bool, String) /* (finished, error, log) */
