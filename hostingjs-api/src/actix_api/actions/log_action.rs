@@ -3,23 +3,23 @@ use super::fstools;
 fn find_latest_log<S: AsRef<str>>(theme_path_absolute: S, write: bool) -> String {
     let mut i = 0;
 
-    loop {
+    let a = loop {
         let current_file = format!("{}/install.log-{}", theme_path_absolute.as_ref(), i);
         let log_path = std::path::Path::new(&current_file);
         match log_path.exists() {
-            true => match write {
-                true => {
-                    i = i + 1;
-                    continue;
-                }
-                false => break log_path.to_str().unwrap().to_string(),
-            },
+            true => i = i + 1,
             false => match write {
-                true => break log_path.to_str().unwrap().to_string(),
-                false => break String::new(),
+                true => break current_file,
+                false => match i != 0 {
+                    true => break format!("{}/install.log-{}", theme_path_absolute.as_ref(), i - 1),
+                    false => break String::new(),
+                },
             },
         }
-    }
+    };
+
+    println!("theme: {} -- Path: {}", theme_path_absolute.as_ref(), a);
+    a
 }
 
 pub fn read_log<S: AsRef<str>>(theme_path_absolute: S) -> (bool, bool, String) /* (finished, error, log) */
