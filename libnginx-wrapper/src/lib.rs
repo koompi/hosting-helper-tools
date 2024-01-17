@@ -13,7 +13,7 @@ fn restart_reload_service() {
         .unwrap();
 }
 
-pub fn init_migration(force: bool) -> Result<(), (u16, String)>{
+pub fn init_migration(force: bool) -> Result<(), (u16, String)> {
     fn nginx_migration(force: bool) -> Result<(), (u16, String)> {
         let program_base_path = dotenv::var("PROGRAM_BASE_PATH").unwrap();
         let program_base_name = dotenv::var("PROGRAM_BASE_NAME").unwrap();
@@ -64,7 +64,14 @@ pub fn init_migration(force: bool) -> Result<(), (u16, String)>{
             .unwrap();
 
         // Reload service
-        Ok(restart_reload_service())
+        // Enable the Nginx Program
+        Command::new("systemctl")
+            .arg("enable")
+            .arg("--now")
+            .arg(program_base_name)
+            .output()
+            .unwrap();
+        Ok(())
     }
 
     fn systemd_migration() -> Result<(), (u16, String)> {
