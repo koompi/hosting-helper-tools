@@ -2,6 +2,17 @@ use libnginx_wrapper::http_server::nginx_features::NginxFeatures;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
+pub struct UpdateNginxQueryString {
+    #[serde(default = "def_bool::<true>")]
+    ssl: bool,
+}
+impl UpdateNginxQueryString {
+    pub fn get_ssl(&self) -> &bool {
+        &self.ssl
+    }
+}
+
+#[derive(Debug, Deserialize)]
 pub struct AddNginxQueryString {
     #[serde(default = "def_bool::<true>")]
     cloudflare: bool,

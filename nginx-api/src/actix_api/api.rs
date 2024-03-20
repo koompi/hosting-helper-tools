@@ -1,7 +1,7 @@
 use super::{
     super::{cloudflare_migration, deployment_migration, nginx_migration},
     obj_response::{ActixCustomResponse, CustomDnsStruct},
-    querystring::{AddNginxQueryString, ListNginxQueryString},
+    querystring::{AddNginxQueryString, ListNginxQueryString, UpdateNginxQueryString},
     HttpResponse,
 };
 use actix_web::{
@@ -91,11 +91,12 @@ pub async fn post_add_nginx(
 pub async fn put_update_target_site(
     req: HttpRequest,
     target_site: Json<TargetSite>,
+    qstring: Query<UpdateNginxQueryString>
 ) -> Result<HttpResponse, ActixCustomResponse> {
     let server_name = req.match_info().get("server_name").unwrap();
     let target_site = target_site.into_inner();
 
-    match NginxObj::update_target(server_name, target_site).await {
+    match NginxObj::update_target(server_name, target_site, *qstring.get_ssl()).await {
         Ok(()) => Ok(()),
         Err((error_code, message)) => Err(ActixCustomResponse::new_text(error_code, message)),
     }?;

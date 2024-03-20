@@ -73,6 +73,7 @@ impl NginxObj {
     pub async fn update_target(
         server_name: &str,
         target_site: TargetSite,
+        ssl: bool,
     ) -> Result<(), (u16, String)> {
         let old_obj = match select_one_from_tbl_nginxconf(server_name, None) {
             Ok(obj) => Ok(obj),
@@ -83,13 +84,16 @@ impl NginxObj {
         let obj = Self::new_unchecked(old_obj.server_name, target_site, old_obj.feature);
         let destination_file = obj.write_to_disk()?;
 
-        match obj.make_ssl() {
-            Ok(()) => Ok(()),
-            Err(err) => Err({
-                std::fs::remove_file(&destination_file).unwrap();
-                err
-            }),
-        }?;
+        if ssl {
+            match obj.make_ssl() {
+                Ok(()) => Ok(()),
+                Err(err) => Err({
+                    std::fs::remove_file(&destination_file).unwrap();
+                    err
+                }),
+            }?;
+        }
+        
         restart_reload_service();
         update_target_tbl_nginxconf(server_name, &target_site_str);
 

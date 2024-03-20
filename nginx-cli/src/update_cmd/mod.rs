@@ -1,5 +1,6 @@
 use super::{Arg, ArgAction, Command};
 mod dname_target_arg;
+mod negate_arg;
 
 pub(crate) fn update_subcmd() -> Command {
     Command::new("update")
@@ -7,4 +8,5 @@ pub(crate) fn update_subcmd() -> Command {
         .long_flag("update")
         .about("Update existing NGINX configuration file")
         .args(dname_target_arg::dname_target_arg())
+        .arg(negate_arg::negate_arg())
 }
